@@ -84,11 +84,34 @@ export default function SettingsPanel({
   }
 
   return (
-    <div style={{ maxWidth: 720 }}>
+    <div className="settings-panel" style={{ maxWidth: 760 }}>
       <h2>Settings</h2>
+      <p className="settings-intro">Choose the task you came for. Everything else can stay closed.</p>
 
-      <ProfileManager settings={settings} onChange={onChange} />
+      <div className="settings-at-glance" aria-label="Current access settings">
+        <span><strong>{settings.vocabularySize}</strong> vocabulary</span>
+        <span><strong>{settings.tileSize}</strong> targets</span>
+        <span><strong>{settings.languages.length}</strong> language{settings.languages.length === 1 ? '' : 's'}</span>
+      </div>
 
+      <details className="settings-disclosure">
+        <summary>
+          <span className="settings-disclosure-icon"><Icon name="profile" size={22} /></span>
+          <span><strong>Communicator profiles</strong><small>Switch people or create a separate profile</small></span>
+          <Icon name="down" size={18} />
+        </summary>
+        <div className="settings-disclosure-body">
+          <ProfileManager settings={settings} onChange={onChange} />
+        </div>
+      </details>
+
+      <details className="settings-disclosure">
+        <summary>
+          <span className="settings-disclosure-icon"><Icon name="settings" size={22} /></span>
+          <span><strong>Access and display</strong><small>Vocabulary size, target size, contrast, and input</small></span>
+          <Icon name="down" size={18} />
+        </summary>
+        <div className="settings-disclosure-body">
       <section className="settings-section" aria-labelledby="access-heading">
         <div className="settings-section-heading">
           <span><Icon name="settings" size={22} /></span>
@@ -158,7 +181,16 @@ export default function SettingsPanel({
           Run guided setup again
         </button>
       </section>
+        </div>
+      </details>
 
+      <details className="settings-disclosure">
+        <summary>
+          <span className="settings-disclosure-icon"><Icon name="wave" size={22} /></span>
+          <span><strong>Voice and languages</strong><small>Languages, speech speed, and touch feedback</small></span>
+          <Icon name="down" size={18} />
+        </summary>
+        <div className="settings-disclosure-body">
       <div className="field">
         <label>Languages shown in Letters & Numbers</label>
         <div className="row">
@@ -224,7 +256,16 @@ export default function SettingsPanel({
           <span>{nativeHapticsAvailable() ? 'Enabled' : 'Native build required'}</span>
         </label>
       </div>
+        </div>
+      </details>
 
+      <details className="settings-disclosure">
+        <summary>
+          <span className="settings-disclosure-icon"><Icon name="photos" size={22} /></span>
+          <span><strong>Visual supports</strong><small>Saved ARASAAC pictograms and licensing</small></span>
+          <Icon name="down" size={18} />
+        </summary>
+        <div className="settings-disclosure-body">
       <h3>Visual supports</h3>
       <p>
         Phrase editors can search ARASAAC once and save the selected pictogram on this
@@ -240,7 +281,16 @@ export default function SettingsPanel({
           Read the ARASAAC terms
         </a>
       </div>
+        </div>
+      </details>
 
+      <details className="settings-disclosure">
+        <summary>
+          <span className="settings-disclosure-icon"><Icon name="lock" size={22} /></span>
+          <span><strong>Backup and storage</strong><small>Protect, export, share, or restore this profile</small></span>
+          <Icon name="down" size={18} />
+        </summary>
+        <div className="settings-disclosure-body">
       <h3>Keeping your recordings safe</h3>
       <p>
         Browsers can clear app data when a device runs out of space. Protect the data
@@ -306,7 +356,16 @@ export default function SettingsPanel({
         </div>
       )}
       {importMsg && <p role="status">{importMsg}</p>}
+        </div>
+      </details>
 
+      <details className="settings-disclosure">
+        <summary>
+          <span className="settings-disclosure-icon"><Icon name="home" size={22} /></span>
+          <span><strong>Tablet setup</strong><small>Install the app and keep it on screen</small></span>
+          <Icon name="down" size={18} />
+        </summary>
+        <div className="settings-disclosure-body">
       <h3>Putting it on the tablet</h3>
       <ol>
         <li>Host the built app anywhere with HTTPS (GitHub Pages / Netlify — see README).</li>
@@ -318,6 +377,8 @@ export default function SettingsPanel({
           app's icon → Pin.
         </li>
       </ol>
+        </div>
+      </details>
     </div>
   )
 }

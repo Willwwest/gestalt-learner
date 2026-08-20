@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import CaregiverHome from './CaregiverHome'
+import PersonalizeHome from './PersonalizeHome'
 import PhraseManager from './PhraseManager'
 import SongManager from './SongManager'
 import SceneManager from './SceneManager'
@@ -13,6 +14,7 @@ import type { Settings } from '../lib/types'
 
 type Tab =
   | 'today'
+  | 'personalize'
   | 'guide'
   | 'progress'
   | 'phrases'
@@ -34,12 +36,9 @@ const TAB_GROUPS: Array<{
     ],
   },
   {
-    label: 'Personalize',
+    label: 'Make it yours',
     tabs: [
-      { id: 'phrases', label: 'Phrases', detail: 'Words & recordings', icon: 'record' },
-      { id: 'songs', label: 'Songs', detail: 'Lines & pauses', icon: 'songs' },
-      { id: 'books', label: 'Story Time', detail: 'Books & refrains', icon: 'book' },
-      { id: 'scenes', label: 'Photo scenes', detail: 'Familiar places', icon: 'photos' },
+      { id: 'personalize', label: 'Personalize', detail: 'Words, stories & photos', icon: 'record' },
     ],
   },
   {
@@ -51,6 +50,13 @@ const TAB_GROUPS: Array<{
     ],
   },
 ]
+
+const PERSONALIZE_LABELS: Partial<Record<Tab, string>> = {
+  phrases: 'Words and recordings',
+  songs: 'Songs',
+  books: 'Story Time',
+  scenes: 'Photo scenes',
+}
 
 export default function GrownUps({
   settings,
@@ -66,6 +72,8 @@ export default function GrownUps({
     bodyRef.current?.scrollTo({ top: 0, behavior: 'auto' })
     setTab(next)
   }
+  const personalizeTool = PERSONALIZE_LABELS[tab]
+  const activeNav = personalizeTool ? 'personalize' : tab
 
   return (
     <div className="grownups">
@@ -86,9 +94,9 @@ export default function GrownUps({
               {group.tabs.map((t) => (
                 <button
                   key={t.id}
-                  className={`gu-tab${tab === t.id ? ' active' : ''}`}
+                  className={`gu-tab${activeNav === t.id ? ' active' : ''}`}
                   onClick={() => chooseTab(t.id)}
-                  aria-current={tab === t.id ? 'page' : undefined}
+                  aria-current={activeNav === t.id ? 'page' : undefined}
                 >
                   <span className="gu-tab-icon">
                     <Icon name={t.icon} size={21} />
@@ -112,7 +120,16 @@ export default function GrownUps({
       </aside>
       <main className="gu-body" ref={bodyRef}>
         <div className="gu-content">
+          {personalizeTool && (
+            <div className="tool-context-bar">
+              <button type="button" onClick={() => chooseTab('personalize')}>
+                <Icon name="back" size={17} /> All personalization
+              </button>
+              <span>{personalizeTool}</span>
+            </div>
+          )}
           {tab === 'today' && <CaregiverHome settings={settings} onNavigate={chooseTab} />}
+          {tab === 'personalize' && <PersonalizeHome onNavigate={chooseTab} />}
           {tab === 'guide' && <Guide />}
           {tab === 'progress' && (
             <StageTracker settings={settings} onSettingsChange={onSettingsChange} />

@@ -40,11 +40,16 @@ break them apart into flexible language. EchoBloom is designed around that path:
   photo in the manager to place a spot, give it a phrase, record it.
 - **⭐ Grown-Ups** (hold the star 2.5s) — record phrases in your own voice, add the
   child's own scripts with *meaning notes* ("what it means / how to respond"), a
-  coaching guide distilled from gestalt-language research, a progress journal,
-  settings, and full backup/restore.
+  personalized one-step plan, a searchable situation-based help library, a progress
+  journal, settings, and full backup/restore. Dense reference material stays collapsed
+  until a caregiver chooses to open it.
 
 Mature AAC infrastructure included in the caregiver studio:
 
+- **Caregiver-first navigation** — six clear destinations replace a long list of
+  editing screens. The default Today page is designed for a parent with 30 seconds;
+  personalization, stage detail, professional summaries, and technical settings remain
+  available as intentional drill-downs.
 - **Guided setup and progressive vocabulary** — start with 6, grow to 12, or show the
   full library. New phrases reveal at the end so established motor paths remain stable.
 - **Access profiles** — comfortable/large/extra-large targets, high contrast, reduced
