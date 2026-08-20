@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { getRecording, listPhrases, logEvent } from '../lib/db'
-import { playBlob, playPhrase, stopAllAudio } from '../lib/audio'
+import { getRecording, listPhrases, logEvent, rememberMessage } from '../lib/db'
+import { playBlob, playPhrase, preloadPhraseAudio, stopAllAudio } from '../lib/audio'
 import { speak } from '../lib/tts'
 import { selectionFeedback } from '../lib/haptics'
 import type { Phrase, Settings } from '../lib/types'
@@ -22,6 +22,7 @@ export default function Mix({ settings }: { settings: Settings }) {
       const alive = parts.filter((p) => !p.hidden)
       setStarters(alive.filter((p) => p.partType === 'starter'))
       setEnders(alive.filter((p) => p.partType === 'ender'))
+      void preloadPhraseAudio(alive)
     })
   }, [])
 
@@ -30,7 +31,9 @@ export default function Mix({ settings }: { settings: Settings }) {
 
   const playCombined = async (s: Phrase, e: Phrase) => {
     stopAllAudio()
-    void logEvent('mix-play', sentenceOf(s, e))
+    const text = sentenceOf(s, e)
+    void logEvent('mix-play', text)
+    void rememberMessage({ text, emoji: '🧩', lang: s.lang, source: 'mix' })
     // both halves recorded in a real voice -> play them back to back
     // (hearing the chunks join is the point of mitigation play);
     // otherwise let TTS speak the whole sentence with natural flow
@@ -56,6 +59,14 @@ export default function Mix({ settings }: { settings: Settings }) {
       await playCombined(s, keptEnder)
     } else {
       void logEvent('mix-part', s.text)
+      void rememberMessage({
+        text: s.text,
+        emoji: s.emoji,
+        lang: s.lang,
+        source: 'mix',
+        phraseId: s.id,
+        recordingId: s.recordingId,
+      })
       await playPhrase(s, settings.ttsRate)
     }
   }
@@ -68,6 +79,14 @@ export default function Mix({ settings }: { settings: Settings }) {
     } else {
       // no starter picked: hearing the word alone is single-word exposure — also good
       void logEvent('mix-part', e.text)
+      void rememberMessage({
+        text: e.text,
+        emoji: e.emoji,
+        lang: e.lang,
+        source: 'mix',
+        phraseId: e.id,
+        recordingId: e.recordingId,
+      })
       await playPhrase(e, settings.ttsRate)
     }
   }
@@ -82,7 +101,8 @@ export default function Mix({ settings }: { settings: Settings }) {
     <>
       <div className="mix-strip">
         <button
-          className={`mix-sentence${starter && ender ? '' : ' idle'}`}
+          className={`mix-sentence dwell-target${starter && ender ? '' : ' idle'}`}
+          data-dwell={starter && ender ? 'true' : undefined}
           onClick={() => starter && ender && void playCombined(starter, ender)}
           aria-live="polite"
         >
@@ -121,7 +141,8 @@ export default function Mix({ settings }: { settings: Settings }) {
             {starters.map((s) => (
               <button
                 key={s.id}
-                className={`part${starter?.id === s.id ? ' selected' : ''}`}
+                className={`part dwell-target${starter?.id === s.id ? ' selected' : ''}`}
+                data-dwell="true"
                 onClick={() => void onStarter(s)}
                 aria-pressed={starter?.id === s.id}
               >
@@ -143,9 +164,10 @@ export default function Mix({ settings }: { settings: Settings }) {
             {enders.map((e) => (
               <button
                 key={e.id}
-                className={`part${ender?.id === e.id ? ' selected' : ''}${
+                className={`part dwell-target${ender?.id === e.id ? ' selected' : ''}${
                   compatible(e) ? '' : ' dimmed'
                 }`}
+                data-dwell="true"
                 onClick={() => void onEnder(e)}
                 aria-pressed={ender?.id === e.id}
               >

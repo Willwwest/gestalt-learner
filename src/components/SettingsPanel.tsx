@@ -1,10 +1,18 @@
 import { useEffect, useRef, useState } from 'react'
 import { listSymbols, requestPersistence } from '../lib/db'
-import { exportBackup, importBackup } from '../lib/backup'
+import {
+  exportBackup,
+  importBackup,
+  inspectBackup,
+  shareBackup,
+  type BackupSummary,
+} from '../lib/backup'
 import { speak } from '../lib/tts'
 import { LANGUAGES, type LanguageCode, type Settings } from '../lib/types'
 import { nativeHapticsAvailable } from '../lib/haptics'
 import { ARASAAC_ATTRIBUTION } from '../lib/symbols'
+import ProfileManager from './ProfileManager'
+import Icon from './Icon'
 
 export default function SettingsPanel({
   settings,
@@ -17,6 +25,9 @@ export default function SettingsPanel({
   const [usage, setUsage] = useState('')
   const [importMsg, setImportMsg] = useState('')
   const [symbolCount, setSymbolCount] = useState(0)
+  const [pendingImport, setPendingImport] = useState<File | null>(null)
+  const [importSummary, setImportSummary] = useState<BackupSummary | null>(null)
+  const [shareMsg, setShareMsg] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -46,16 +57,24 @@ export default function SettingsPanel({
     setPersisted(await requestPersistence())
   }
 
-  const onImport = async (file: File) => {
-    if (
-      !window.confirm(
-        'Importing replaces everything in the app (phrases, recordings, notes) with the backup. Continue?',
-      )
-    ) {
-      return
-    }
+  const previewImport = async (file: File) => {
+    setImportMsg('Checking backup…')
+    setPendingImport(null)
+    setImportSummary(null)
     try {
-      const restored = await importBackup(file)
+      setImportSummary(await inspectBackup(file))
+      setPendingImport(file)
+      setImportMsg('')
+    } catch (err) {
+      setImportMsg(`Cannot use this file: ${err instanceof Error ? err.message : String(err)}`)
+    }
+  }
+
+  const restoreImport = async () => {
+    if (!pendingImport || !importSummary) return
+    if (!window.confirm(`Replace the current profile with the previewed backup for ${importSummary.childName}?`)) return
+    try {
+      const restored = await importBackup(pendingImport)
       if (restored) onChange(restored)
       setImportMsg('Backup restored ✓ — reloading…')
       setTimeout(() => window.location.reload(), 800)
@@ -67,6 +86,78 @@ export default function SettingsPanel({
   return (
     <div style={{ maxWidth: 720 }}>
       <h2>Settings</h2>
+
+      <ProfileManager settings={settings} onChange={onChange} />
+
+      <section className="settings-section" aria-labelledby="access-heading">
+        <div className="settings-section-heading">
+          <span><Icon name="settings" size={22} /></span>
+          <div>
+            <h3 id="access-heading">Communication access</h3>
+            <p>These controls change size and input support, never the learned order of words.</p>
+          </div>
+        </div>
+
+        <div className="settings-grid">
+          <div className="field">
+            <label htmlFor="vocabulary-size">Phrase library</label>
+            <select
+              id="vocabulary-size"
+              value={settings.vocabularySize}
+              onChange={(event) => onChange({ ...settings, vocabularySize: event.target.value as Settings['vocabularySize'] })}
+            >
+              <option value="starter">Starter · first 6 per topic</option>
+              <option value="growing">Growing · first 12 per topic</option>
+              <option value="full">Full · show every phrase</option>
+            </select>
+            <small>Growing reveals phrases at the end; existing buttons do not move.</small>
+          </div>
+          <div className="field">
+            <label htmlFor="target-size">Communication target size</label>
+            <select
+              id="target-size"
+              value={settings.tileSize}
+              onChange={(event) => onChange({ ...settings, tileSize: event.target.value as Settings['tileSize'] })}
+            >
+              <option value="standard">Comfortable</option>
+              <option value="large">Large</option>
+              <option value="extra-large">Extra large</option>
+            </select>
+            <small>Applies to phrase, letter, song, and scene selection targets.</small>
+          </div>
+          <div className="field">
+            <label htmlFor="dwell-time">Pointer dwell activation</label>
+            <select
+              id="dwell-time"
+              value={settings.dwellMs}
+              onChange={(event) => onChange({ ...settings, dwellMs: Number(event.target.value) as Settings['dwellMs'] })}
+            >
+              <option value={0}>Off</option>
+              <option value={600}>Activate after 0.6 seconds</option>
+              <option value={1000}>Activate after 1 second</option>
+            </select>
+            <small>For eye/head-mouse pointers. Touch and switch selection stay immediate.</small>
+          </div>
+        </div>
+
+        <div className="settings-toggle-grid">
+          <label className="settings-toggle-card">
+            <span><strong>Quick Talk everywhere</strong><small>Urgent self-advocacy remains one tap away.</small></span>
+            <input type="checkbox" checked={settings.quickBarEnabled} onChange={(event) => onChange({ ...settings, quickBarEnabled: event.target.checked })} />
+          </label>
+          <label className="settings-toggle-card">
+            <span><strong>High contrast</strong><small>Stronger boundaries and selection rings.</small></span>
+            <input type="checkbox" checked={settings.highContrast} onChange={(event) => onChange({ ...settings, highContrast: event.target.checked })} />
+          </label>
+          <label className="settings-toggle-card">
+            <span><strong>Reduce motion</strong><small>Stops decorative transitions and smooth scrolling.</small></span>
+            <input type="checkbox" checked={settings.reducedMotion} onChange={(event) => onChange({ ...settings, reducedMotion: event.target.checked })} />
+          </label>
+        </div>
+        <button type="button" className="btn secondary" onClick={() => onChange({ ...settings, onboardingComplete: false })}>
+          Run guided setup again
+        </button>
+      </section>
 
       <div className="field">
         <label>Languages shown in Letters & Numbers</label>
@@ -163,8 +254,19 @@ export default function SettingsPanel({
         <button className="btn secondary" onClick={() => void exportBackup(settings)}>
           ⬇ Export backup
         </button>
+        <button
+          className="btn secondary"
+          onClick={() => {
+            setShareMsg('Preparing private backup…')
+            void shareBackup(settings)
+              .then((result) => setShareMsg(result === 'shared' ? 'Backup shared' : 'Backup downloaded'))
+              .catch((error: unknown) => setShareMsg(error instanceof Error && error.name === 'AbortError' ? '' : 'Could not share the backup'))
+          }}
+        >
+          Share with care team
+        </button>
         <button className="btn secondary" onClick={() => fileRef.current?.click()}>
-          ⬆ Import backup
+          Preview import…
         </button>
         <input
           ref={fileRef}
@@ -173,13 +275,37 @@ export default function SettingsPanel({
           style={{ display: 'none' }}
           onChange={(e) => {
             const f = e.target.files?.[0]
-            if (f) void onImport(f)
+            if (f) void previewImport(f)
             e.target.value = ''
           }}
         />
         <span style={{ fontSize: 13, color: 'var(--ink-soft)' }}>{usage}</span>
       </div>
-      {importMsg && <p>{importMsg}</p>}
+      {shareMsg && <p className="settings-status" role="status">{shareMsg}</p>}
+      {importSummary && pendingImport && (
+        <div className="backup-preview">
+          <div className="backup-preview-head">
+            <span><Icon name="check" size={21} /></span>
+            <div>
+              <strong>Valid EchoBloom backup</strong>
+              <small>{new Date(importSummary.exportedAt).toLocaleString()}</small>
+            </div>
+          </div>
+          <dl>
+            <div><dt>Profile</dt><dd>{importSummary.childName}</dd></div>
+            <div><dt>Phrases</dt><dd>{importSummary.phrases}</dd></div>
+            <div><dt>Recordings</dt><dd>{importSummary.recordings}</dd></div>
+            <div><dt>Songs</dt><dd>{importSummary.songs}</dd></div>
+            <div><dt>Photo scenes</dt><dd>{importSummary.scenes}</dd></div>
+          </dl>
+          <p>Restoring is all-or-nothing and affects only the currently open communicator profile. Export the current profile first if it may be needed later.</p>
+          <div className="row">
+            <button className="btn danger" type="button" onClick={() => void restoreImport()}>Restore this backup</button>
+            <button className="btn secondary" type="button" onClick={() => { setPendingImport(null); setImportSummary(null) }}>Cancel</button>
+          </div>
+        </div>
+      )}
+      {importMsg && <p role="status">{importMsg}</p>}
 
       <h3>Putting it on the tablet</h3>
       <ol>

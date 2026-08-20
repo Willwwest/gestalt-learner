@@ -3,15 +3,17 @@ import PhraseManager from './PhraseManager'
 import SongManager from './SongManager'
 import SceneManager from './SceneManager'
 import Guide from './Guide'
+import StageTracker from './StageTracker'
 import Journal from './Journal'
 import SettingsPanel from './SettingsPanel'
 import Icon, { type IconName } from './Icon'
 import type { Settings } from '../lib/types'
 
-type Tab = 'guide' | 'phrases' | 'songs' | 'scenes' | 'journal' | 'settings'
+type Tab = 'guide' | 'progress' | 'phrases' | 'songs' | 'scenes' | 'journal' | 'settings'
 
 const TABS: { id: Tab; label: string; detail: string; icon: IconName }[] = [
   { id: 'guide', label: 'Guide', detail: 'Learn the approach', icon: 'book' },
+  { id: 'progress', label: 'Progress', detail: 'Stage & next steps', icon: 'sprout' },
   {
     id: 'phrases',
     label: 'Phrases',
@@ -74,6 +76,9 @@ export default function GrownUps({
       <main className="gu-body">
         <div className="gu-content">
           {tab === 'guide' && <Guide />}
+          {tab === 'progress' && (
+            <StageTracker settings={settings} onSettingsChange={onSettingsChange} />
+          )}
           {tab === 'phrases' && <PhraseManager settings={settings} />}
           {tab === 'songs' && <SongManager settings={settings} />}
           {tab === 'scenes' && <SceneManager settings={settings} />}

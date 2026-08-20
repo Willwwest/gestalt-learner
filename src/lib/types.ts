@@ -49,6 +49,10 @@ export interface Phrase {
   hidden?: boolean
   /** one of "This Week's Words" — the handful of phrases the family is modeling now */
   focus?: boolean
+  /** pinned in the child's finder without changing the motor layout of the board */
+  favorite?: boolean
+  /** one of the always-available self-advocacy phrases shown in Quick Talk */
+  quickAccess?: boolean
   /** photo-scene hotspot position, as fractions of the photo (0..1) */
   x?: number
   y?: number
@@ -105,6 +109,23 @@ export interface UsageEvent {
   detail: string
 }
 
+export type MessageSource = 'board' | 'quick' | 'mix' | 'song' | 'scene'
+
+/** A private, local replay record of something the communicator chose to say. */
+export interface SpokenMessage {
+  id?: number
+  at: number
+  text: string
+  emoji: string
+  lang: LanguageCode
+  source: MessageSource
+  phraseId?: string
+  recordingId?: string
+}
+
+export type TileSize = 'standard' | 'large' | 'extra-large'
+export type VocabularySize = 'starter' | 'growing' | 'full'
+
 export interface Settings {
   /** which languages show up in Letters & Numbers */
   languages: LanguageCode[]
@@ -116,6 +137,21 @@ export interface Settings {
   childName: string
   /** gentle native touch feedback; ignored in the browser/PWA */
   hapticsEnabled: boolean
+  /** child-view target size; changing it never changes the order of words */
+  tileSize: TileSize
+  /** reveal more phrases only at the end of each stable category */
+  vocabularySize: VocabularySize
+  highContrast: boolean
+  reducedMotion: boolean
+  /** pointer dwell activation for eye/head-mouse access; 0 disables it */
+  dwellMs: 0 | 600 | 1000
+  /** keep urgent self-advocacy phrases available throughout child views */
+  quickBarEnabled: boolean
+  /** the caregiver has completed or intentionally skipped first-run setup */
+  onboardingComplete: boolean
+  /** where the CHILD is in Natural Language Acquisition (1-6).
+   *  Only ever changed by a caregiver — the app suggests, never decides. */
+  childStage: 1 | 2 | 3 | 4 | 5 | 6
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -124,4 +160,12 @@ export const DEFAULT_SETTINGS: Settings = {
   ttsRate: 0.92,
   childName: '',
   hapticsEnabled: false,
+  tileSize: 'standard',
+  vocabularySize: 'full',
+  highContrast: false,
+  reducedMotion: false,
+  dwellMs: 0,
+  quickBarEnabled: true,
+  onboardingComplete: false,
+  childStage: 1,
 }

@@ -2,6 +2,8 @@ import type { CSSProperties } from 'react'
 import HoldButton from './HoldButton'
 import Icon, { type IconName } from './Icon'
 import type { View } from '../App'
+import type { Settings } from '../lib/types'
+import QuickTalk from './QuickTalk'
 
 interface Activity {
   id: Exclude<View, 'home' | 'grownups'>
@@ -66,9 +68,11 @@ const ACTIVITIES: Activity[] = [
 export default function Home({
   onNavigate,
   onCaregiverIntent,
+  settings,
 }: {
   onNavigate: (v: View) => void
   onCaregiverIntent: () => void
+  settings: Settings
 }) {
   return (
     <div className="home">
@@ -97,6 +101,8 @@ export default function Home({
           />
         </div>
       </header>
+
+      <QuickTalk settings={settings} home />
 
       <div className="home-prompt">
         <span className="eyebrow">

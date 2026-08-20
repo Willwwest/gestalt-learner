@@ -2,7 +2,14 @@ import { useState } from 'react'
 import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components'
 import RecorderControl from './RecorderControl'
 import SymbolPicker, { type PendingSymbol } from './SymbolPicker'
-import { deletePhrase, deleteRecording, makeId, putPhrase, saveRecording } from '../lib/db'
+import {
+  deletePhrase,
+  deleteRecording,
+  listPhrases,
+  makeId,
+  putPhrase,
+  saveRecording,
+} from '../lib/db'
 import { cacheArasaacSymbol } from '../lib/symbols'
 import { LANGUAGES, type LanguageCode, type Phrase, type SlotKind } from '../lib/types'
 
@@ -21,6 +28,8 @@ export default function PhraseEditor({ phrase, isNew, onDone }: Props) {
   const [lang, setLang] = useState<LanguageCode>(phrase.lang)
   const [hidden, setHidden] = useState(!!phrase.hidden)
   const [focus, setFocus] = useState(!!phrase.focus)
+  const [favorite, setFavorite] = useState(!!phrase.favorite)
+  const [quickAccess, setQuickAccess] = useState(!!phrase.quickAccess)
   const [slot, setSlot] = useState<SlotKind>(phrase.slot ?? 'thing')
   const [accepts, setAccepts] = useState<SlotKind[]>(phrase.accepts ?? ['thing'])
   // undefined = keep existing recording, null = remove it, Blob = replace it
@@ -41,6 +50,15 @@ export default function PhraseEditor({ phrase, isNew, onDone }: Props) {
     setSaveError('')
     setSaving(true)
     try {
+      if (isBoardPhrase && quickAccess && !phrase.quickAccess) {
+        const existingQuick = (await listPhrases()).filter(
+          (item) => item.quickAccess && !item.hidden && item.id !== phrase.id,
+        )
+        if (existingQuick.length >= 5) {
+          throw new Error('Quick Talk already has five phrases. Unpin one before adding another')
+        }
+      }
+
       let symbolId = phrase.symbolId
       if (pendingSymbol === null) {
         symbolId = undefined
@@ -72,6 +90,8 @@ export default function PhraseEditor({ phrase, isNew, onDone }: Props) {
         lang,
         hidden,
         focus,
+        favorite: isBoardPhrase ? favorite : phrase.favorite,
+        quickAccess: isBoardPhrase ? quickAccess : phrase.quickAccess,
         recordingId,
         symbolId,
         ...(isMixPart
@@ -240,7 +260,29 @@ export default function PhraseEditor({ phrase, isNew, onDone }: Props) {
           />
 
           {isBoardPhrase && (
-            <div className="field">
+            <div className="field phrase-pin-options">
+              <label className="check-label">
+                <input
+                  type="checkbox"
+                  checked={favorite}
+                  onChange={(event) => setFavorite(event.target.checked)}
+                />
+                <span>
+                  <strong>Favorite</strong>—show this phrase at the top of Find without
+                  moving it on the board.
+                </span>
+              </label>
+              <label className="check-label">
+                <input
+                  type="checkbox"
+                  checked={quickAccess}
+                  onChange={(event) => setQuickAccess(event.target.checked)}
+                />
+                <span>
+                  <strong>Quick Talk</strong>—keep this self-advocacy phrase available
+                  throughout child activities (maximum five).
+                </span>
+              </label>
               <label className="check-label">
                 <input
                   type="checkbox"

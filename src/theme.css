@@ -3291,3 +3291,260 @@ select {
 .lang-rail .cat-chip.active small {
   color: rgba(255, 255, 255, 0.85);
 }
+
+/* ---------- progress / stage tracker (caregiver) ---------- */
+.stage-rail {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 18px 0 14px;
+}
+
+.stage-pip {
+  flex: 1 1 110px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 2px solid var(--line);
+  background: var(--card);
+  text-align: left;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+
+.stage-pip-num {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--ink-soft);
+}
+
+.stage-pip-name {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.stage-pip.past {
+  background: var(--bg);
+  opacity: 0.75;
+}
+
+.stage-pip.current {
+  border-color: var(--view-accent);
+  background: var(--view-soft);
+}
+
+.stage-pip.current .stage-pip-num {
+  color: var(--view-accent);
+}
+
+.stage-suggestion {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 14px 18px;
+  border-radius: 16px;
+  border: 2px solid var(--view-accent);
+  background: var(--view-soft);
+  margin: 12px 0 20px;
+}
+
+.stage-suggestion p {
+  margin: 4px 0 0;
+  font-size: 14.5px;
+}
+
+.stage-progress-note {
+  font-size: 14.5px;
+  color: var(--ink-soft);
+  margin: 10px 0 20px;
+}
+
+.stage-progress-count {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.stage-card {
+  border: 2px solid var(--line);
+  border-radius: 18px;
+  padding: 18px 22px;
+  background: var(--card);
+  margin-bottom: 24px;
+}
+
+.stage-card h3 {
+  margin-top: 0;
+}
+
+.stage-card h4 {
+  margin: 18px 0 6px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-soft);
+}
+
+.stage-card ul {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.stage-callouts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.stage-callout {
+  border-radius: 14px;
+  padding: 12px 14px;
+  background: var(--bg);
+  border-left: 4px solid var(--line);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.stage-callout strong {
+  display: block;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+}
+
+.stage-callout.celebrate {
+  border-left-color: var(--good);
+}
+
+.stage-callout.watch {
+  border-left-color: var(--view-accent);
+}
+
+.stage-callout.app {
+  border-left-color: var(--ink-soft);
+}
+
+.stage-hint {
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+.stage-saved {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--good);
+}
+
+.milestone-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 10px;
+  margin: 12px 0 14px;
+}
+
+.milestone-option {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+  text-align: left;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 2px solid var(--line);
+  background: var(--card);
+  transition: border-color 120ms ease;
+}
+
+.milestone-option:hover {
+  border-color: var(--view-accent);
+}
+
+.milestone-option.next-stage {
+  border-style: dashed;
+}
+
+.milestone-option-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 15px;
+}
+
+.milestone-option em {
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.badge.next {
+  background: var(--view-soft);
+  color: var(--view-accent);
+}
+
+.milestone-note-card {
+  border: 2px solid var(--view-accent);
+  border-radius: 16px;
+  padding: 16px 18px;
+  background: var(--card);
+  margin: 8px 0 20px;
+}
+
+.milestone-note-card p {
+  font-size: 14px;
+  color: var(--ink-soft);
+  margin: 4px 0 0;
+}
+
+.milestone-history {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.milestone-history li {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--bg);
+  font-size: 14.5px;
+}
+
+.mh-date {
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  min-width: 52px;
+}
+
+.mh-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mh-body em {
+  font-size: 13.5px;
+  color: var(--ink-soft);
+}
+
+.evidence-note {
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+  margin-top: 8px;
+}

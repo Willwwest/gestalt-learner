@@ -708,6 +708,36 @@ async function applyPack4Fixups() {
   await patch('builtin-p3-go-0', { emoji: '🎠' })
 }
 
+// Pack 5: an always-available self-advocacy set. These are ordinary phrases,
+// so caregivers can replace any of them without creating a separate vocabulary.
+async function applyPack5QuickTalk() {
+  const db = await getDB()
+  const quickIds = [
+    'builtin-help-0-1', // Help, please!
+    'builtin-feelings-3-1', // I need a break.
+    'builtin-feelings-5-1', // It's too loud!
+    'builtin-chat-6-1', // No, thank you.
+  ]
+  for (const id of quickIds) {
+    const existing = await db.get('phrases', id)
+    if (existing) await db.put('phrases', { ...existing, quickAccess: true })
+  }
+
+  if (!(await db.get('phrases', 'builtin-p5-help-stop'))) {
+    await putPhrase({
+      id: 'builtin-p5-help-stop',
+      categoryId: 'help',
+      text: 'Stop, please.',
+      emoji: '✋',
+      lang: 'en',
+      stage: 1,
+      quickAccess: true,
+      order: 99,
+      builtin: true,
+    })
+  }
+}
+
 /** Apply any content packs newer than what this install has seen. */
 export async function seedContentPacks(): Promise<boolean> {
   const db = await getDB()
@@ -722,6 +752,10 @@ export async function seedContentPacks(): Promise<boolean> {
     await applyPack4Fixups()
     applied = true
   }
-  if (applied) await db.put('settings', { key: 'content-version', value: 4 })
+  if (version < 5) {
+    await applyPack5QuickTalk()
+    applied = true
+  }
+  if (applied) await db.put('settings', { key: 'content-version', value: 5 })
   return applied
 }

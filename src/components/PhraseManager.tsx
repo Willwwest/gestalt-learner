@@ -50,6 +50,8 @@ function SortablePhraseRow({
         {phrase.gloss && <div className="pr-gloss">{phrase.gloss}</div>}
       </div>
       <div className="phrase-badges">
+        {phrase.quickAccess && <span className="badge quick-badge">Quick Talk</span>}
+        {phrase.favorite && <span className="badge favorite-badge">Favorite</span>}
         {phrase.focus && <span className="badge">This week</span>}
         <span className={`badge${phrase.recordingId ? '' : ' muted'}`}>
           {phrase.recordingId ? 'Family voice' : 'Device voice'}

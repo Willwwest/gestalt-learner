@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { getPhoto, listPhrases, listScenes, logEvent } from '../lib/db'
-import { playPhrase, stopAllAudio } from '../lib/audio'
+import { getPhoto, listPhrases, listScenes, logEvent, rememberMessage } from '../lib/db'
+import { playPhrase, preloadPhraseAudio, stopAllAudio } from '../lib/audio'
 import type { Phrase, Scene, Settings } from '../lib/types'
 import Icon from './Icon'
 import PhraseVisual from './PhraseVisual'
@@ -29,7 +29,9 @@ export default function Scenes({ settings }: { settings: Settings }) {
         setPhotoUrl(url)
       }
       const ps = await listPhrases(`scene:${scene.id}`)
-      setHotspots(ps.filter((p) => !p.hidden))
+      const visible = ps.filter((p) => !p.hidden)
+      setHotspots(visible)
+      void preloadPhraseAudio(visible)
     })()
     return () => {
       if (url) URL.revokeObjectURL(url)
@@ -44,6 +46,14 @@ export default function Scenes({ settings }: { settings: Settings }) {
     void selectionFeedback(settings.hapticsEnabled)
     setNowPlaying(spot)
     void logEvent('scene-tap', spot.text)
+    void rememberMessage({
+      text: spot.text,
+      emoji: spot.emoji,
+      lang: spot.lang,
+      source: 'scene',
+      phraseId: spot.id,
+      recordingId: spot.recordingId,
+    })
     await playPhrase(spot, settings.ttsRate)
   }
 
@@ -52,7 +62,12 @@ export default function Scenes({ settings }: { settings: Settings }) {
       <>
         <div className="tile-grid">
           {scenes.map((s) => (
-            <button key={s.id} className="tile" onClick={() => setScene(s)}>
+            <button
+              key={s.id}
+              className="tile dwell-target"
+              data-dwell="true"
+              onClick={() => setScene(s)}
+            >
               <span className="tile-emoji">{s.emoji}</span>
               <span className="tile-text">{s.title}</span>
             </button>
@@ -96,7 +111,8 @@ export default function Scenes({ settings }: { settings: Settings }) {
             {hotspots.map((spot) => (
               <button
                 key={spot.id}
-                className={`hotspot${nowPlaying?.id === spot.id ? ' playing' : ''}`}
+                className={`hotspot dwell-target${nowPlaying?.id === spot.id ? ' playing' : ''}`}
+                data-dwell="true"
                 style={{ left: `${(spot.x ?? 0.5) * 100}%`, top: `${(spot.y ?? 0.5) * 100}%` }}
                 onClick={() => void onHotspot(spot)}
                 aria-label={spot.text}

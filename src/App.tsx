@@ -7,6 +7,9 @@ import Mix from './components/Mix'
 import Letters from './components/Letters'
 import Songs from './components/Songs'
 import Scenes from './components/Scenes'
+import QuickTalk from './components/QuickTalk'
+import VoiceDock from './components/VoiceDock'
+import Onboarding from './components/Onboarding'
 import { loadSettings, saveSettings } from './lib/db'
 import { stopAllAudio } from './lib/audio'
 import type { Settings } from './lib/types'
@@ -77,6 +80,59 @@ export default function App() {
     })
   }, [])
 
+  // Access preferences apply to the home screen and every child activity.
+  useEffect(() => {
+    const root = document.documentElement
+    root.dataset.tileSize = settings.tileSize
+    root.dataset.contrast = settings.highContrast ? 'high' : 'soft'
+    root.dataset.motion = settings.reducedMotion ? 'reduced' : 'gentle'
+    root.style.setProperty('--dwell-ms', `${settings.dwellMs}ms`)
+  }, [settings.highContrast, settings.reducedMotion, settings.tileSize, settings.dwellMs])
+
+  // Pointer dwell is useful with eye/head-mouse access. Touch and pen input are
+  // deliberately ignored so ordinary taps remain immediate.
+  useEffect(() => {
+    if (settings.dwellMs === 0) return
+    let target: HTMLButtonElement | null = null
+    let timer: ReturnType<typeof setTimeout> | null = null
+    const reset = () => {
+      if (timer) clearTimeout(timer)
+      timer = null
+      target?.classList.remove('dwelling')
+      target = null
+    }
+    const onOver = (event: PointerEvent) => {
+      if (event.pointerType === 'touch' || event.pointerType === 'pen') return
+      const next = (event.target as Element | null)?.closest<HTMLButtonElement>(
+        'button.dwell-target[data-dwell="true"]',
+      )
+      if (!next || next.disabled || next === target) return
+      reset()
+      target = next
+      target.classList.add('dwelling')
+      timer = setTimeout(() => {
+        const activationTarget = target
+        reset()
+        activationTarget?.click()
+      }, settings.dwellMs)
+    }
+    const onOut = (event: PointerEvent) => {
+      if (!target) return
+      const related = event.relatedTarget as Node | null
+      if (related && target.contains(related)) return
+      if ((event.target as Element | null)?.closest('button') === target) reset()
+    }
+    document.addEventListener('pointerover', onOver)
+    document.addEventListener('pointerout', onOut)
+    document.addEventListener('click', reset)
+    return () => {
+      reset()
+      document.removeEventListener('pointerover', onOver)
+      document.removeEventListener('pointerout', onOut)
+      document.removeEventListener('click', reset)
+    }
+  }, [settings.dwellMs])
+
   // keep the screen awake while the app is open (re-request when returning)
   useEffect(() => {
     let lock: WakeLockSentinel | null = null
@@ -121,12 +177,18 @@ export default function App() {
 
   if (view === 'home') {
     return (
-      <Home
-        onNavigate={setView}
-        onCaregiverIntent={() => {
-          void loadGrownUps()
-        }}
-      />
+      <>
+        <Home
+          settings={settings}
+          onNavigate={setView}
+          onCaregiverIntent={() => {
+            void loadGrownUps()
+          }}
+        />
+        {!settings.onboardingComplete && (
+          <Onboarding settings={settings} onComplete={updateSettings} />
+        )}
+      </>
     )
   }
 
@@ -158,11 +220,17 @@ export default function App() {
         </div>
       </header>
       <div className="kid-body">
-        {view === 'board' && <Board settings={settings} />}
-        {view === 'mix' && <Mix settings={settings} />}
-        {view === 'letters' && <Letters settings={settings} />}
-        {view === 'songs' && <Songs settings={settings} />}
-        {view === 'scenes' && <Scenes settings={settings} />}
+        {view !== 'grownups' && <QuickTalk key={`quick-${view}`} settings={settings} />}
+        {view !== 'grownups' && (
+          <div className="kid-view-content">
+            {view === 'board' && <Board settings={settings} />}
+            {view === 'mix' && <Mix settings={settings} />}
+            {view === 'letters' && <Letters settings={settings} />}
+            {view === 'songs' && <Songs settings={settings} />}
+            {view === 'scenes' && <Scenes settings={settings} />}
+          </div>
+        )}
+        {view !== 'grownups' && <VoiceDock settings={settings} />}
         {view === 'grownups' && (
           <Suspense
             fallback={

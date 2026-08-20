@@ -7,10 +7,12 @@ import type {
   Scene,
   Settings,
   Song,
+  SpokenMessage,
   SymbolRow,
   UsageEvent,
 } from './types'
 import { DEFAULT_SETTINGS } from './types'
+import { databaseNameForProfile, getActiveProfileId } from './profiles'
 
 interface EchoBloomDB extends DBSchema {
   categories: { key: string; value: Category }
@@ -22,12 +24,13 @@ interface EchoBloomDB extends DBSchema {
   scenes: { key: string; value: Scene }
   photos: { key: string; value: PhotoRow }
   symbols: { key: string; value: SymbolRow }
+  messages: { key: number; value: SpokenMessage; indexes: { byTime: number } }
 }
 
 let dbPromise: Promise<IDBPDatabase<EchoBloomDB>> | null = null
 
 export function getDB() {
-  dbPromise ??= openDB<EchoBloomDB>('echobloom', 3, {
+  dbPromise ??= openDB<EchoBloomDB>(databaseNameForProfile(getActiveProfileId()), 4, {
     upgrade(db, oldVersion) {
       if (oldVersion < 1) {
         db.createObjectStore('categories', { keyPath: 'id' })
@@ -45,6 +48,13 @@ export function getDB() {
       }
       if (oldVersion < 3) {
         db.createObjectStore('symbols', { keyPath: 'id' })
+      }
+      if (oldVersion < 4) {
+        const messages = db.createObjectStore('messages', {
+          keyPath: 'id',
+          autoIncrement: true,
+        })
+        messages.createIndex('byTime', 'at')
       }
     },
     // another tab is trying to upgrade: get out of its way and pick up the new version
@@ -217,6 +227,37 @@ export async function recentEvents(limit = 200): Promise<UsageEvent[]> {
     if (out.length >= limit) break
   }
   return out
+}
+
+export async function clearEvents() {
+  const db = await getDB()
+  await db.clear('events')
+}
+
+// ---------- child-facing communication history ----------
+export async function rememberMessage(message: Omit<SpokenMessage, 'id' | 'at'>) {
+  const db = await getDB()
+  const saved: SpokenMessage = { ...message, at: Date.now() }
+  const id = await db.add('messages', saved)
+  const withId = { ...saved, id }
+  window.dispatchEvent(new CustomEvent<SpokenMessage>('echobloom:message', { detail: withId }))
+  return withId
+}
+
+export async function recentMessages(limit = 30): Promise<SpokenMessage[]> {
+  const db = await getDB()
+  const out: SpokenMessage[] = []
+  const tx = db.transaction('messages')
+  for await (const cursor of tx.store.index('byTime').iterate(null, 'prev')) {
+    out.push(cursor.value)
+    if (out.length >= limit) break
+  }
+  return out
+}
+
+export async function clearMessages() {
+  const db = await getDB()
+  await db.clear('messages')
 }
 
 /** Ask the browser to protect our data from low-storage eviction. */

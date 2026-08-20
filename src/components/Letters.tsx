@@ -91,7 +91,8 @@ export default function Letters({ settings }: { settings: Settings }) {
           {settings.languages.map((l) => (
             <button
               key={l}
-              className={`cat-chip${l === lang ? ' active' : ''}`}
+              className={`cat-chip dwell-target${l === lang ? ' active' : ''}`}
+              data-dwell="true"
               onClick={() => switchLang(l)}
               aria-pressed={l === lang}
             >
@@ -102,28 +103,32 @@ export default function Letters({ settings }: { settings: Settings }) {
         </div>
         <div className="mode-switch" role="group" aria-label="What to explore">
           <button
-            className={mode === 'letters' ? 'active' : ''}
+            className={`dwell-target${mode === 'letters' ? ' active' : ''}`}
+            data-dwell="true"
             onClick={() => switchMode('letters')}
             aria-pressed={mode === 'letters'}
           >
             ABC <span>Letters</span>
           </button>
           <button
-            className={mode === 'numbers' ? 'active' : ''}
+            className={`dwell-target${mode === 'numbers' ? ' active' : ''}`}
+            data-dwell="true"
             onClick={() => switchMode('numbers')}
             aria-pressed={mode === 'numbers'}
           >
             123 <span>Numbers</span>
           </button>
           <button
-            className={mode === 'colors' ? 'active' : ''}
+            className={`dwell-target${mode === 'colors' ? ' active' : ''}`}
+            data-dwell="true"
             onClick={() => switchMode('colors')}
             aria-pressed={mode === 'colors'}
           >
             🎨 <span>Colors</span>
           </button>
           <button
-            className={mode === 'shapes' ? 'active' : ''}
+            className={`dwell-target${mode === 'shapes' ? ' active' : ''}`}
+            data-dwell="true"
             onClick={() => switchMode('shapes')}
             aria-pressed={mode === 'shapes'}
           >
@@ -135,7 +140,8 @@ export default function Letters({ settings }: { settings: Settings }) {
         {tiles.map((t) => (
           <button
             key={t.glyph || t.say}
-            className={`glyph${isCurrent(t) ? ' playing' : ''}`}
+            className={`glyph dwell-target${isCurrent(t) ? ' playing' : ''}`}
+            data-dwell="true"
             onClick={() => void onTile(t)}
             aria-pressed={isCurrent(t)}
           >
@@ -153,7 +159,8 @@ export default function Letters({ settings }: { settings: Settings }) {
         ))}
       </div>
       <button
-        className={`caption${current ? '' : ' idle'}`}
+        className={`caption dwell-target${current ? '' : ' idle'}`}
+        data-dwell={current ? 'true' : undefined}
         onClick={() => comment && void speak(comment.speak, lang, settings.ttsRate)}
         aria-live="polite"
       >

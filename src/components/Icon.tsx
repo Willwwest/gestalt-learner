@@ -15,12 +15,17 @@ export type IconName =
   | 'photos'
   | 'play'
   | 'record'
+  | 'replay'
   | 'reset'
+  | 'search'
   | 'settings'
   | 'songs'
   | 'sprout'
+  | 'star'
   | 'stop'
   | 'talk'
+  | 'history'
+  | 'profile'
   | 'up'
   | 'down'
   | 'wave'
@@ -177,6 +182,40 @@ export default function Icon({ name, size = 24, ...props }: IconProps) {
       return (
         <svg {...common}>
           <path d="M4 8V4m0 0h4M4 4l3 3a8 8 0 1 1-2 8" />
+        </svg>
+      )
+    case 'replay':
+      return (
+        <svg {...common}>
+          <path d="M5 8V4m0 0h4M5 4l3 3a7.5 7.5 0 1 1-2 8" />
+          <path d="m10 9 6 3-6 3V9Z" fill="currentColor" stroke="none" />
+        </svg>
+      )
+    case 'search':
+      return (
+        <svg {...common}>
+          <circle cx="10.5" cy="10.5" r="6.5" />
+          <path d="m15.5 15.5 5 5" />
+        </svg>
+      )
+    case 'history':
+      return (
+        <svg {...common}>
+          <path d="M4 8V4m0 0h4M4 4l3 3a8 8 0 1 1-2 8" />
+          <path d="M12 7v5l3 2" />
+        </svg>
+      )
+    case 'star':
+      return (
+        <svg {...common}>
+          <path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 3Z" />
+        </svg>
+      )
+    case 'profile':
+      return (
+        <svg {...common}>
+          <circle cx="12" cy="8" r="4" />
+          <path d="M4.5 21c.7-4.2 3.5-6.5 7.5-6.5s6.8 2.3 7.5 6.5" />
         </svg>
       )
     case 'lock':

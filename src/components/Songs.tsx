@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { listPhrases, listSongs, logEvent } from '../lib/db'
-import { playPhrase, stopAllAudio } from '../lib/audio'
+import { listPhrases, listSongs, logEvent, rememberMessage } from '../lib/db'
+import { playPhrase, preloadPhraseAudio, stopAllAudio } from '../lib/audio'
 import type { Phrase, Settings, Song } from '../lib/types'
 import Icon from './Icon'
 import PhraseVisual from './PhraseVisual'
@@ -25,7 +25,11 @@ export default function Songs({ settings }: { settings: Settings }) {
 
   useEffect(() => {
     if (!song) return
-    void listPhrases(`song:${song.id}`).then((ps) => setLines(ps.filter((p) => !p.hidden)))
+    void listPhrases(`song:${song.id}`).then((ps) => {
+      const visible = ps.filter((p) => !p.hidden)
+      setLines(visible)
+      void preloadPhraseAudio(visible)
+    })
   }, [song])
 
   const stop = () => {
@@ -41,6 +45,14 @@ export default function Songs({ settings }: { settings: Settings }) {
     setPlayingAll(false)
     setCurrentLine(line.id)
     void logEvent('song-line', line.text)
+    void rememberMessage({
+      text: line.text,
+      emoji: line.emoji,
+      lang: line.lang,
+      source: 'song',
+      phraseId: line.id,
+      recordingId: line.recordingId,
+    })
     await playPhrase(line, settings.ttsRate)
   }
 
@@ -73,7 +85,8 @@ export default function Songs({ settings }: { settings: Settings }) {
           {songs.map((s) => (
             <button
               key={s.id}
-              className="tile"
+              className="tile dwell-target"
+              data-dwell="true"
               onClick={() => {
                 void selectionFeedback(settings.hapticsEnabled)
                 setSong(s)
@@ -121,7 +134,8 @@ export default function Songs({ settings }: { settings: Settings }) {
         {lines.map((line) => (
           <button
             key={line.id}
-            className={`part song-line${currentLine === line.id ? ' selected' : ''}`}
+            className={`part song-line dwell-target${currentLine === line.id ? ' selected' : ''}`}
+            data-dwell="true"
             onClick={() => void playOne(line)}
             aria-pressed={currentLine === line.id}
           >
