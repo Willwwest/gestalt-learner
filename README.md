@@ -5,6 +5,10 @@ learn language in whole, melody-rich chunks. Built for a preschooler who loves l
 and numbers in English, Spanish, Korean, and Russian, and shared in case it helps
 another family.
 
+**▶ Live app: <https://willwwest.github.io/gestalt-learner/>** — open it in Chrome on
+an Android tablet and choose *Install app* for a fullscreen, fully offline home-screen
+app. Every push to `main` redeploys it automatically.
+
 Gestalt learners pick up language in whole, melody-rich chunks ("gestalts") and later
 break them apart into flexible language. EchoBloom is designed around that path:
 
@@ -60,10 +64,10 @@ Icons are generated (no image tools needed): `node scripts/gen-icons.mjs`.
 The app is a **PWA**: installed from Chrome it becomes a real home-screen app
 (Android mints a WebAPK for it), fullscreen, fully offline.
 
-1. **Host it** (one-time): push this repo to GitHub and enable GitHub Pages with a
-   build action, or drag `dist/` into Netlify/Cloudflare Pages. Any HTTPS static host
-   works — the app never needs a server after install.
-2. On the tablet, open the URL in **Chrome → ⋮ menu → Install app** (or "Add to home
+1. **Hosting is already live** at <https://willwwest.github.io/gestalt-learner/> via
+   the GitHub Actions workflow in `.github/workflows/deploy.yml`. (To host your own
+   copy: fork the repo, then Settings → Pages → Source: **GitHub Actions**.)
+2. On the tablet, open that URL in **Chrome → ⋮ menu → Install app** (or "Add to home
    screen").
 3. Open the installed app → Grown-Ups → Settings → **Protect storage** (guards your
    recordings against low-storage cleanup).
