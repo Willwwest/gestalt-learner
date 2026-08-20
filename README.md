@@ -1,8 +1,9 @@
 # 🌱 EchoBloom
 
-A communication companion for a young **gestalt language processor** — built for one
-particular almost-five-year-old who loves letters and numbers in English, Spanish,
-Korean, and Russian.
+A communication companion for young **gestalt language processors** — children who
+learn language in whole, melody-rich chunks. Built for a preschooler who loves letters
+and numbers in English, Spanish, Korean, and Russian, and shared in case it helps
+another family.
 
 Gestalt learners pick up language in whole, melody-rich chunks ("gestalts") and later
 break them apart into flexible language. EchoBloom is designed around that path:
@@ -20,24 +21,24 @@ break them apart into flexible language. EchoBloom is designed around that path:
   a quiz.
 - **🎵 Songs** — songs are usually a gestalt learner's first gestalts. Record each
   line in your own singing voice; an optional *fill-in pause* after each line leaves
-  room for him to sing the next bit (serve-and-return practice). Ships with the ABC
+  room for the child to sing the next bit (serve-and-return practice). Ships with the ABC
   song.
 - **📸 Photo Time** — real family photos with talking hotspots (visual scene
   displays, the strongest-evidence pattern for shared parent-child AAC use). Tap the
   photo in the manager to place a spot, give it a phrase, record it.
-- **⭐ Grown-Ups** (hold the star 2.5s) — record phrases in your own voice, add his
-  real scripts with *meaning notes* ("what he means / how to respond"), a coaching
-  guide distilled from gestalt-language research, a progress journal, settings, and
-  full backup/restore.
+- **⭐ Grown-Ups** (hold the star 2.5s) — record phrases in your own voice, add the
+  child's own scripts with *meaning notes* ("what it means / how to respond"), a
+  coaching guide distilled from gestalt-language research, a progress journal,
+  settings, and full backup/restore.
 
 Progression mechanics (the road from scripts to conversation):
 
 - **Break-it-apart** — long-press any board phrase to split it into its chunks
   ("Let's get" + "milk"), the bridge from whole scripts to stage-2 mitigation.
 - **🗨️ Chatting and ❓ Asking categories** — conversation isn't requesting;
-  comments, greetings, and questions *he owns* are what build back-and-forth.
-- **⭐ This Week's Words** — star up to 5 focus phrases; they're marked on his board
-  and the Journal tracks when he uses them and suggests what to model next.
+  comments, greetings, and questions the child owns are what build back-and-forth.
+- **⭐ This Week's Words** — star up to 5 focus phrases; they're marked on the
+  board and the Journal tracks when they're used, suggesting what to model next.
 
 Design rules baked in (see the in-app Guide for sources): no quizzing mechanics
 anywhere, no "you/your" in any phrase, phrases are hidden rather than deleted,
@@ -69,7 +70,7 @@ The app is a **PWA**: installed from Chrome it becomes a real home-screen app
 4. **Voices**: Android Settings → System → Text-to-speech → Google engine → download
    the **Spanish, Korean, and Russian** voice packs once; they then work offline.
    (Your recordings always work offline regardless.)
-5. **Keep him in the app**: Android Settings → Security → **App pinning** → on.
+5. **Keep the child in the app**: Android Settings → Security → **App pinning** → on.
    Open the app, tap Recents, tap the app icon → Pin. Unpinning can require your PIN.
 
 ### Developing against the real tablet (optional, no hosting needed)

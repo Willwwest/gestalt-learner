@@ -139,7 +139,7 @@ export default function SceneManager({ settings: _settings }: { settings: Settin
     <div>
       <h2>Photo scenes</h2>
       <p>
-        A photo of a real place he loves — grandma's kitchen, the bath, his bookshelf —
+        A photo of a real place your child loves — grandma's kitchen, the bath, the bookshelf —
         with talking spots on it. Tap the photo below to place a spot, give it a
         phrase ("Let's take a bath!"), and record it. Photos of real routines beat
         clip-art every time.

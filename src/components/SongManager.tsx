@@ -114,7 +114,7 @@ export default function SongManager({ settings }: { settings: Settings }) {
       <p>
         Songs are usually a gestalt learner's very first language — melody carries the
         words in. Record each line in your own singing voice. A <strong>fill-in
-        pause</strong> after each line leaves him room to sing the next bit himself:
+        pause</strong> after each line leaves room to sing the next bit:
         pause, look expectant, and wait.
       </p>
       <div className="row" style={{ margin: '14px 0' }}>

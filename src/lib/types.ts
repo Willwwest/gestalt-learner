@@ -60,7 +60,7 @@ export interface Song {
   id: string
   title: string
   emoji: string
-  /** seconds of silence after each line — room for him to fill in the next bit */
+  /** seconds of silence after each line — room for the child to fill in the next bit */
   pauseSec: number
   order: number
   builtin?: boolean

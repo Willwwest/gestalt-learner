@@ -56,7 +56,7 @@ export default function Songs({ settings }: { settings: Settings }) {
       await playPhrase(line, settings.ttsRate)
       if (playToken.current !== token) return
       if (song.pauseSec > 0) {
-        // the fill-in-the-blank pause: leave room for him to sing the next line
+        // the fill-in-the-blank pause: leave room for the child to sing the next line
         await new Promise((r) => setTimeout(r, song.pauseSec * 1000))
       }
     }

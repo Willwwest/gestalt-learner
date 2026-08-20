@@ -131,7 +131,7 @@ export default function PhraseEditor({ phrase, isNew, onDone }: Props) {
 
           <div className="field">
             <label htmlFor="phrase-text">
-              The words (his perspective or “we”—never “you”. Short and warm.)
+              The words (their perspective or “we”—never “you”. Short and warm.)
             </label>
             <input
               id="phrase-text"
@@ -180,14 +180,14 @@ export default function PhraseEditor({ phrase, isNew, onDone }: Props) {
           {!isMixPart && (
             <div className="field">
               <label htmlFor="phrase-gloss">
-                Meaning note (grown-ups only): what does he mean, and how should we respond?
+                Meaning note (grown-ups only): what does it mean, and how should we respond?
               </label>
               <textarea
                 id="phrase-gloss"
                 rows={2}
                 value={gloss}
                 onChange={(event) => setGloss(event.target.value)}
-                placeholder={'e.g. “Daddy, would you like milk?” = he wants milk. Get it, then model: Let\'s get milk!'}
+                placeholder={'e.g. “Daddy, would you like milk?” = they want milk. Get it, then model: Let\'s get milk!'}
               />
             </div>
           )}

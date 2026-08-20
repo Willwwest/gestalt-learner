@@ -82,11 +82,11 @@ export default function Journal() {
                       ? 'Not heard yet — keep modeling, no pressure.'
                       : n < 3
                         ? `Heard ${n}×! It's landing.`
-                        : `Heard ${n}× — he owns it! Time to stretch it: long-press it on his board to model the pieces, and try new endings in Mix & Match.`}
+                        : `Heard ${n}× — it's owned! Time to stretch it: long-press it on the board to model the pieces, and try new endings in Mix & Match.`}
                   </div>
                 </div>
                 <button className="btn secondary" onClick={() => void markUsed(p)}>
-                  He used it! 🎉
+                  They used it! 🎉
                 </button>
               </div>
             )
@@ -129,7 +129,7 @@ export default function Journal() {
       <h3>Recent taps in the app</h3>
       <p style={{ color: 'var(--ink-soft)', fontSize: 13.5 }}>
         Counts don't measure communication — engagement does. This list is just a
-        peek at what he's been drawn to.
+        peek at what's been catching their interest.
       </p>
       {activity.map((e) => (
         <div className="phrase-row" key={e.id}>
