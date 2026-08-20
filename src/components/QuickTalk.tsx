@@ -4,6 +4,8 @@ import { playPhrase, preloadPhraseAudio } from '../lib/audio'
 import { selectionFeedback } from '../lib/haptics'
 import type { Phrase, Settings } from '../lib/types'
 import PhraseVisual from './PhraseVisual'
+import CalmSpace from './CalmSpace'
+import Icon from './Icon'
 
 export default function QuickTalk({
   settings,
@@ -13,12 +15,25 @@ export default function QuickTalk({
   home?: boolean
 }) {
   const [phrases, setPhrases] = useState<Phrase[]>([])
+  const [calmOpen, setCalmOpen] = useState(false)
 
   useEffect(() => {
     void listPhrases().then((all) => {
-      const quick = all
+      let quick = all
         .filter((phrase) => phrase.quickAccess && !phrase.hidden && phrase.stage === 1)
         .slice(0, 5)
+      // Backups made before Quick Talk existed have no pin flags. Keep a safe
+      // default available without rewriting the restored vocabulary.
+      if (quick.length === 0) {
+        const defaults = new Set([
+          'Help, please!',
+          'I need a break.',
+          "It's too loud!",
+          'No, thank you.',
+          'Stop, please.',
+        ])
+        quick = all.filter((phrase) => defaults.has(phrase.text) && !phrase.hidden).slice(0, 5)
+      }
       setPhrases(quick)
       void preloadPhraseAudio(quick)
     })
@@ -64,6 +79,18 @@ export default function QuickTalk({
           </button>
         ))}
       </div>
+      <button
+        type="button"
+        className="quick-calm-button"
+        onClick={() => setCalmOpen(true)}
+        aria-label="Open quiet screen and visual timer"
+      >
+        <Icon name="sprout" size={19} />
+        <span>Pause</span>
+      </button>
+      {calmOpen && (
+        <CalmSpace reducedMotion={settings.reducedMotion} onClose={() => setCalmOpen(false)} />
+      )}
     </section>
   )
 }

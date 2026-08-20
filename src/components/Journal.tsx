@@ -25,11 +25,13 @@ const KIND_ICONS: Record<string, string> = {
   'split-part': '✂️',
   'focus-used': '⭐',
   'quick-talk': '✋',
+  'typed-talk': '⌨️',
 }
 
 const ACTIVITY_LABELS: Record<string, string> = {
   'phrase-tap': 'Talk board',
   'quick-talk': 'Quick Talk',
+  'typed-talk': 'Typed speech',
   'mix-play': 'New combinations',
   'mix-part': 'Phrase pieces',
   'letter-tap': 'Letters & concepts',
@@ -46,9 +48,13 @@ export default function Journal() {
   const [focusPhrases, setFocusPhrases] = useState<Phrase[]>([])
   const [note, setNote] = useState('')
   const [range, setRange] = useState<7 | 30 | 'all'>(7)
+  const [now, setNow] = useState(() => Date.now())
 
   const refresh = useCallback(() => {
-    void recentEvents(2000).then(setEvents)
+    void recentEvents(2000).then((rows) => {
+      setEvents(rows)
+      setNow(Date.now())
+    })
     void listPhrases().then((all) =>
       setFocusPhrases(all.filter((p) => p.focus && !p.hidden && p.stage === 1)),
     )
@@ -73,16 +79,16 @@ export default function Journal() {
 
   const notes = events.filter((e) => e.kind === 'note')
   const activity = events.filter((e) => e.kind !== 'note').slice(0, 60)
-  const startAt = range === 'all' ? 0 : Date.now() - range * 24 * 60 * 60 * 1000
+  const startAt = range === 'all' ? 0 : now - range * 24 * 60 * 60 * 1000
   const windowEvents = events.filter((event) => event.kind !== 'note' && event.at >= startAt)
   const uniqueMessages = new Set(
     windowEvents
-      .filter((event) => ['phrase-tap', 'quick-talk', 'mix-play', 'scene-tap'].includes(event.kind))
+      .filter((event) => ['phrase-tap', 'quick-talk', 'typed-talk', 'mix-play', 'scene-tap'].includes(event.kind))
       .map((event) => event.detail),
   ).size
   const activeDays = new Set(windowEvents.map((event) => new Date(event.at).toDateString())).size
   const phraseCounts = [...windowEvents.reduce((counts, event) => {
-    if (!['phrase-tap', 'quick-talk', 'mix-play', 'scene-tap'].includes(event.kind)) return counts
+    if (!['phrase-tap', 'quick-talk', 'typed-talk', 'mix-play', 'scene-tap'].includes(event.kind)) return counts
     counts.set(event.detail, (counts.get(event.detail) ?? 0) + 1)
     return counts
   }, new Map<string, number>())].sort((a, b) => b[1] - a[1]).slice(0, 5)

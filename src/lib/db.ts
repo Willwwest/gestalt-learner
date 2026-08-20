@@ -12,7 +12,7 @@ import type {
   UsageEvent,
 } from './types'
 import { DEFAULT_SETTINGS } from './types'
-import { databaseNameForProfile, getActiveProfileId } from './profiles'
+import { databaseNameForProfile, getActiveProfile, getActiveProfileId } from './profiles'
 
 interface EchoBloomDB extends DBSchema {
   categories: { key: string; value: Category }
@@ -71,7 +71,10 @@ export function getDB() {
 export async function loadSettings(): Promise<Settings> {
   const db = await getDB()
   const row = await db.get('settings', 'app')
-  return { ...DEFAULT_SETTINGS, ...((row?.value as Partial<Settings>) ?? {}) }
+  const value = { ...DEFAULT_SETTINGS, ...((row?.value as Partial<Settings>) ?? {}) }
+  const profile = getActiveProfile()
+  if (!value.childName && profile.id !== 'default') value.childName = profile.name
+  return value
 }
 
 export async function saveSettings(value: Settings) {

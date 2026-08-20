@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components'
 import type { Category, Phrase } from '../lib/types'
 import Icon from './Icon'
@@ -9,19 +9,22 @@ export default function PhraseFinder({
   phrases,
   categories,
   onChoose,
+  onSpeakText,
   onClose,
 }: {
   open: boolean
   phrases: Phrase[]
   categories: Category[]
   onChoose: (phrase: Phrase) => void
+  onSpeakText: (text: string) => void
   onClose: () => void
 }) {
   const [query, setQuery] = useState('')
 
-  useEffect(() => {
-    if (open) setQuery('')
-  }, [open])
+  const close = () => {
+    setQuery('')
+    onClose()
+  }
 
   const categoryById = useMemo(
     () => new Map(categories.map((category) => [category.id, category])),
@@ -49,7 +52,7 @@ export default function PhraseFinder({
       className="modal-scrim finder-scrim"
       isOpen={open}
       isDismissable
-      onOpenChange={(isOpen) => !isOpen && onClose()}
+      onOpenChange={(isOpen) => !isOpen && close()}
     >
       <Modal className="modal phrase-finder-modal">
         <Dialog className="modal-dialog">
@@ -58,7 +61,7 @@ export default function PhraseFinder({
               <Heading slot="title">Find a phrase</Heading>
               <p>The board stays in the same order. EchoBloom shows the path.</p>
             </div>
-            <Button className="modal-close" onPress={onClose}>
+            <Button className="modal-close" onPress={close}>
               Close
             </Button>
           </div>
@@ -79,6 +82,25 @@ export default function PhraseFinder({
                 </button>
               )}
             </label>
+
+            {cleaned && (
+              <button
+                type="button"
+                className="finder-type-speak"
+                onClick={() => {
+                  const text = query.trim()
+                  setQuery('')
+                  onSpeakText(text)
+                }}
+              >
+                <span className="finder-type-icon">⌨️</span>
+                <span>
+                  <strong>Say exactly what was typed</strong>
+                  <small>{query.trim()}</small>
+                </span>
+                <Icon name="play" size={20} />
+              </button>
+            )}
 
             {!cleaned && (
               <div className="finder-section-title">
@@ -106,7 +128,10 @@ export default function PhraseFinder({
                       role="listitem"
                       className="finder-result"
                       key={phrase.id}
-                      onClick={() => onChoose(phrase)}
+                      onClick={() => {
+                        setQuery('')
+                        onChoose(phrase)
+                      }}
                     >
                       <PhraseVisual
                         emoji={phrase.emoji}

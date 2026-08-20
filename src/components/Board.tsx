@@ -9,6 +9,9 @@ import { speak } from '../lib/tts'
 import { selectionFeedback } from '../lib/haptics'
 import type { Category, Phrase, Settings } from '../lib/types'
 
+/** synthetic category id for the stage-3+ single-word board */
+const WORDS_CAT = '__words'
+
 interface Split {
   phrase: Phrase
   /** the mix-and-match beginning this phrase starts with, when we have it */
@@ -54,7 +57,13 @@ export default function Board({ settings }: { settings: Settings }) {
       if (cats.length > 0) setActiveCat(cats[0].id)
       const allPhrases = await listPhrases()
       setPhrases(allPhrases)
-      void preloadPhraseAudio(allPhrases.filter((phrase) => phrase.stage === 1 && !phrase.hidden))
+      const boardCategories = new Set(cats.map((category) => category.id))
+      void preloadPhraseAudio(
+        allPhrases.filter(
+          (phrase) =>
+            phrase.stage === 1 && !phrase.hidden && boardCategories.has(phrase.categoryId),
+        ),
+      )
       const parts = await listPhrases('mix')
       setStarters(parts.filter((p) => p.partType === 'starter' && !p.hidden))
     })()
@@ -63,9 +72,31 @@ export default function Board({ settings }: { settings: Settings }) {
     }
   }, [])
 
-  const categoryPhrases = phrases.filter(
-    (p) => p.categoryId === activeCat && p.stage === 1 && !p.hidden,
-  )
+  // From stage 3 the child needs single words available as buttons, not only
+  // locked inside Mix & Match. The Words board reuses the very endings they
+  // already know (same text, same recordings) and is appended at the end of the
+  // rail, so no button anyone has learned ever changes position.
+  const wordsUnlocked = settings.childStage >= 3
+  const wordPhrases = wordsUnlocked
+    ? phrases.filter((p) => p.partType === 'ender' && !p.hidden)
+    : []
+  const railCategories = wordsUnlocked
+    ? [
+        ...categories,
+        {
+          id: WORDS_CAT,
+          name: 'Words',
+          emoji: '🔡',
+          color: '#3d8b7d',
+          order: Number.MAX_SAFE_INTEGER,
+        } as Category,
+      ]
+    : categories
+
+  const categoryPhrases =
+    activeCat === WORDS_CAT
+      ? wordPhrases
+      : phrases.filter((p) => p.categoryId === activeCat && p.stage === 1 && !p.hidden)
   const vocabularyLimit =
     settings.vocabularySize === 'starter'
       ? 6
@@ -76,7 +107,7 @@ export default function Board({ settings }: { settings: Settings }) {
     temporarilyRevealedCat === activeCat
       ? categoryPhrases
       : categoryPhrases.slice(0, vocabularyLimit)
-  const activeCategory = categories.find((cat) => cat.id === activeCat)
+  const activeCategory = railCategories.find((cat) => cat.id === activeCat)
   const boardStyle = {
     '--section-color': activeCategory?.color ?? 'var(--view-accent)',
   } as CSSProperties
@@ -122,6 +153,16 @@ export default function Board({ settings }: { settings: Settings }) {
     window.setTimeout(() => setHighlightId(null), 5000)
   }
 
+  const speakTypedText = async (text: string) => {
+    const lang = settings.languages[0] ?? 'en'
+    setFinderOpen(false)
+    void selectionFeedback(settings.hapticsEnabled)
+    void logEvent('typed-talk', text)
+    void rememberMessage({ text, emoji: '⌨️', lang, source: 'board' })
+    stopAllAudio()
+    await speak(text, lang, settings.ttsRate)
+  }
+
   const beginHold = (phrase: Phrase) => {
     longPressFired.current = false
     if (holdTimer.current) clearTimeout(holdTimer.current)
@@ -156,7 +197,7 @@ export default function Board({ settings }: { settings: Settings }) {
   return (
     <>
       <div className="cat-rail" style={boardStyle} role="group" aria-label="Topics">
-        {categories.map((cat) => (
+        {railCategories.map((cat) => (
           <button
             key={cat.id}
             className={`cat-chip dwell-target${cat.id === activeCat ? ' active' : ''}`}
@@ -232,35 +273,18 @@ export default function Board({ settings }: { settings: Settings }) {
             ✕
           </button>
         </div>
-      ) : (
-        <div className={`caption${nowPlaying ? '' : ' idle'}`} aria-live="polite">
-          {nowPlaying ? (
-            <>
-              <PhraseVisual
-                emoji={nowPlaying.emoji}
-                symbolId={nowPlaying.symbolId}
-                className="cap-emoji"
-              />
-              <span>{nowPlaying.text}</span>
-            </>
-          ) : (
-            <>
-              <span className="caption-icon">
-                <Icon name="wave" size={24} />
-              </span>
-              <span className="caption-copy">
-                <strong>Tap a phrase to say it together.</strong>
-                <small>Press and hold a phrase to hear its pieces.</small>
-              </span>
-            </>
-          )}
+      ) : !nowPlaying ? (
+        <div className="board-hint">
+          <Icon name="wave" size={18} />
+          <span>Tap to speak · press and hold a phrase to hear its pieces.</span>
         </div>
-      )}
+      ) : null}
       <PhraseFinder
         open={finderOpen}
         phrases={phrases}
         categories={categories}
         onChoose={showFoundPhrase}
+        onSpeakText={(text) => void speakTypedText(text)}
         onClose={() => setFinderOpen(false)}
       />
     </>

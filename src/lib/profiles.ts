@@ -88,11 +88,11 @@ export function activateCommunicatorProfile(id: string) {
 export async function deleteCommunicatorProfile(id: string) {
   if (id === 'default') throw new Error('The original communicator profile cannot be removed')
   if (id === getActiveProfileId()) throw new Error('Switch profiles before removing this one')
-  writeProfiles(readProfiles().filter((profile) => profile.id !== id))
   await new Promise<void>((resolve, reject) => {
     const request = indexedDB.deleteDatabase(databaseNameForProfile(id))
     request.onsuccess = () => resolve()
     request.onerror = () => reject(request.error ?? new Error('Could not remove profile data'))
     request.onblocked = () => reject(new Error('Close EchoBloom in other tabs, then try again'))
   })
+  writeProfiles(readProfiles().filter((profile) => profile.id !== id))
 }

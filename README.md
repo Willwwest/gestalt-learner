@@ -16,6 +16,14 @@ break them apart into flexible language. EchoBloom is designed around that path:
   ("Let's get milk!", "I'm tired.", "Help, please!"), spoken in **your recorded voice**
   (falls back to text-to-speech until you record). Organized by routine, big print on
   every button, buttons never move.
+- **✋ Quick Talk** — up to five caregiver-chosen self-advocacy phrases stay available
+  across every child activity. The adjacent **Pause Space** provides a quiet screen and
+  a pressure-free 1/3/5-minute visual timer.
+- **🔎 Find + type to speak** — search every visible phrase, see the topic path, and
+  highlight the original button without rearranging the board. Literate communicators
+  can also type anything and speak it directly.
+- **↻ Replay & recents** — the last choice can be repeated or undone immediately; a
+  private on-device history makes recent messages easy to recover.
 - **🧩 Mix & Match** — stage-2 "mitigation" play: beginnings ("Let's get…", "I'm…")
   combine with endings ("milk", "happy", "outside") into new sentences. Grammar-safe
   pairings only; incompatible pieces dim but never move.
@@ -34,6 +42,21 @@ break them apart into flexible language. EchoBloom is designed around that path:
   child's own scripts with *meaning notes* ("what it means / how to respond"), a
   coaching guide distilled from gestalt-language research, a progress journal,
   settings, and full backup/restore.
+
+Mature AAC infrastructure included in the caregiver studio:
+
+- **Guided setup and progressive vocabulary** — start with 6, grow to 12, or show the
+  full library. New phrases reveal at the end so established motor paths remain stable.
+- **Access profiles** — comfortable/large/extra-large targets, high contrast, reduced
+  motion, native switch-friendly focus, optional eye/head-mouse pointer dwell, and
+  gentle native haptics.
+- **Independent communicator profiles** — each person gets separate words, recordings,
+  photos, history, progress, and settings on the same device.
+- **Private communication insights** — trends and frequently chosen messages are shown
+  as observations, never scores, streaks, or compliance metrics.
+- **Safer sharing** — timestamped, profile-scoped backups include media and replay
+  history; imports are previewed before replacement and the native share sheet can send
+  a backup to a chosen caregiver or SLP.
 
 Progression mechanics (the road from scripts to conversation):
 
@@ -106,7 +129,9 @@ still requires the normal Android signing setup.
 
 Recordings of your voices live in the browser's IndexedDB on the tablet. Export a
 backup (Grown-Ups → Settings → Export backup) after recording sessions and keep the
-file somewhere safe. Import restores everything, including recordings.
+file somewhere safe. Each timestamped backup covers the currently open communicator
+profile and restores its settings, phrases, recordings, photos, symbols, journal, and
+recent-message history. EchoBloom previews the contents before replacing anything.
 
 ## Visual supports and licensing
 

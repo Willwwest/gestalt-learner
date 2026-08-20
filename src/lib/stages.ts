@@ -1,4 +1,5 @@
 import { logEvent, recentEvents } from './db'
+import type { Phrase, UsageEvent } from './types'
 
 /** Where the CHILD is in Natural Language Acquisition.
  *  Distinct from `Phrase.stage`, which describes what a button contains. */
@@ -315,4 +316,307 @@ export function milestonesFor(stage: ChildStage): {
     thisStage: MILESTONES.filter((m) => m.signals === stage),
     nextStage: MILESTONES.filter((m) => m.signals === stage + 1),
   }
+}
+
+// ---------------------------------------------------------------------------
+// Turning the stage into concrete next actions, using the family's own board
+// ---------------------------------------------------------------------------
+
+/** Frames that recombine easily — the phrases worth modeling at stages 1-2. */
+const MITIGABLE_FRAMES = [
+  "let's ",
+  "i'm ",
+  'i want ',
+  'i need ',
+  'more ',
+  "it's time for ",
+  'we need ',
+  'i see ',
+  'i hear ',
+]
+
+export interface PracticeSuggestion {
+  id: string
+  title: string
+  why: string
+  /** concrete candidates drawn from this family's own board */
+  phrases: Phrase[]
+  /** what the caregiver should do with them */
+  action: string
+}
+
+const boardPhrases = (phrases: Phrase[]) =>
+  phrases.filter(
+    (p) =>
+      p.stage === 1 &&
+      !p.hidden &&
+      !p.partType &&
+      !p.categoryId.startsWith('song:') &&
+      !p.categoryId.startsWith('scene:'),
+  )
+
+/** Does this phrase come apart against a beginning the child already knows? */
+export function splitsAgainst(phrase: Phrase, starters: Phrase[]): Phrase | null {
+  for (const s of [...starters].sort((a, b) => b.text.length - a.text.length)) {
+    if (phrase.text.toLowerCase().startsWith(`${s.text.toLowerCase()} `)) return s
+  }
+  return null
+}
+
+/** Stage-specific, board-specific "do this next" — never generic advice alone. */
+export function practiceSuggestions(
+  stage: ChildStage,
+  phrases: Phrase[],
+  starters: Phrase[],
+  events: UsageEvent[] = [],
+): PracticeSuggestion[] {
+  const board = boardPhrases(phrases)
+  const unstarred = board.filter((p) => !p.focus)
+  const out: PracticeSuggestion[] = []
+
+  // real tap counts, so "used most" actually means used most
+  const taps = new Map<string, number>()
+  for (const e of events) {
+    if (['phrase-tap', 'quick-talk', 'scene-tap'].includes(e.kind)) {
+      taps.set(e.detail, (taps.get(e.detail) ?? 0) + 1)
+    }
+  }
+  const byUse = (a: Phrase, b: Phrase) => (taps.get(b.text) ?? 0) - (taps.get(a.text) ?? 0)
+
+  if (stage === 1) {
+    const mitigable = unstarred.filter((p) =>
+      MITIGABLE_FRAMES.some((f) => p.text.toLowerCase().startsWith(f)),
+    )
+    if (mitigable.length > 0) {
+      out.push({
+        id: 'star-mitigable',
+        title: 'Star three phrases that come apart later',
+        why: 'These are built from frames that recombine in stage 2, so modeling them now pays off twice.',
+        phrases: mitigable.slice(0, 3),
+        action: 'Star these in Phrases, then model them at the real moments they belong to.',
+      })
+    }
+    const comments = board.filter((p) => p.categoryId === 'chat').slice(0, 3)
+    if (comments.length > 0) {
+      out.push({
+        id: 'model-comments',
+        title: 'Model comments, not just requests',
+        why: 'Requests get needs met; comments are what conversation is actually made of.',
+        phrases: comments,
+        action: 'Use one of these out loud today when something surprising happens.',
+      })
+    }
+    const noVoice = board.filter((p) => !p.recordingId).sort(byUse)
+    const used = noVoice.filter((p) => (taps.get(p.text) ?? 0) > 0)
+    if (noVoice.length > 0) {
+      out.push({
+        id: 'record-voices',
+        title: used.length
+          ? 'Record your voice on the phrases used most'
+          : 'Record your voice on a few starting phrases',
+        why: used.length
+          ? 'Gestalt learners store the melody. These are the ones actually being tapped, so they earn a real voice first.'
+          : 'Gestalt learners store the melody. A real voice teaches in a way the device voice cannot.',
+        phrases: (used.length ? used : noVoice).slice(0, 3),
+        action: 'Open Phrases, tap Edit, then Record. Ten seconds each.',
+      })
+    }
+  }
+
+  if (stage === 2) {
+    const splittable = board
+      .filter((p) => splitsAgainst(p, starters))
+      .slice(0, 4)
+    if (splittable.length > 0) {
+      out.push({
+        id: 'split-these',
+        title: 'Break these apart together',
+        why: 'Long-press each one on the talk board to show that a big word is made of moveable pieces.',
+        phrases: splittable,
+        action: 'Long-press on the board, tap each piece, be casual about it.',
+      })
+    }
+    out.push({
+      id: 'vary-endings',
+      title: 'Take one beginning and change the ending all day',
+      why: 'Hearing the same frame with different endings is exactly what makes the frame come loose.',
+      phrases: starters.slice(0, 3),
+      action: 'Pick one beginning in Mix & Match and use it with three different endings today.',
+    })
+  }
+
+  if (stage === 3) {
+    const words = phrases
+      .filter((p) => p.partType === 'ender' && !p.hidden)
+      .slice(0, 6)
+    if (words.length > 0) {
+      out.push({
+        id: 'single-words',
+        title: 'Model single words on their own',
+        why: 'At this stage shorter is the breakthrough. These now appear as their own Words board.',
+        phrases: words,
+        action: 'Name what they point at, one word, no request to repeat.',
+      })
+    }
+    const oldGestalts = board.filter((p) => p.focus).slice(0, 3)
+    out.push({
+      id: 'keep-gestalts',
+      title: 'Keep the old scripts available',
+      why: 'Under stress or illness the whole gestalts are still the reliable route. Hide nothing.',
+      phrases: oldGestalts,
+      action: 'No action needed — just resist tidying the board.',
+    })
+  }
+
+  if (stage >= 4) {
+    out.push({
+      id: 'expand',
+      title: 'Expand instead of correcting',
+      why: 'They say "I goed outside"; you say "You went outside! We went so fast!" The correction lands without the cost.',
+      phrases: [],
+      action: 'Add about one step of length to whatever they just said.',
+    })
+  }
+
+  return out
+}
+
+// ---------------------------------------------------------------------------
+// What the app itself observed — offered as prompts, never as proof
+// ---------------------------------------------------------------------------
+
+export interface UsageHint {
+  id: string
+  headline: string
+  detail: string
+  /** the milestone this would be evidence for, if it also happened in speech */
+  suggestMilestone?: string
+}
+
+const DAY = 24 * 60 * 60 * 1000
+
+/** Honest framing: these are TAPS in the app, which are not speech. They are a
+ *  prompt to go notice something, not a measurement of the child's language. */
+export function usageHints(events: UsageEvent[], days = 14): UsageHint[] {
+  const since = Date.now() - days * DAY
+  const recent = events.filter((e) => e.at >= since)
+  const hints: UsageHint[] = []
+
+  const combos = new Set(recent.filter((e) => e.kind === 'mix-play').map((e) => e.detail))
+  if (combos.size > 0) {
+    hints.push({
+      id: 'combos',
+      headline: `${combos.size} different sentence${combos.size === 1 ? '' : 's'} built in Mix & Match`,
+      detail: `Most recent: "${[...combos].slice(-1)[0]}". If a combination like this turned up in real speech, that is the stage-2 milestone.`,
+      suggestMilestone: 'combined-chunks',
+    })
+  }
+
+  const splits = recent.filter((e) => e.kind === 'split-open').length
+  if (splits > 0) {
+    hints.push({
+      id: 'splits',
+      headline: `Phrases broken apart ${splits} time${splits === 1 ? '' : 's'}`,
+      detail: 'Long-press is being used. Watch for a shortened version of a long script showing up in speech.',
+      suggestMilestone: 'trimmed-gestalt',
+    })
+  }
+
+  const words = new Set(recent.filter((e) => e.kind === 'mix-part').map((e) => e.detail))
+  if (words.size >= 3) {
+    hints.push({
+      id: 'single-parts',
+      headline: `${words.size} individual words played on their own`,
+      detail: 'Single pieces are being explored in the app. A single word used alone in real life is the stage-3 milestone.',
+      suggestMilestone: 'single-word',
+    })
+  }
+
+  const spoken = new Set(
+    recent
+      .filter((e) => ['phrase-tap', 'quick-talk', 'scene-tap'].includes(e.kind))
+      .map((e) => e.detail),
+  )
+  if (spoken.size > 0) {
+    hints.push({
+      id: 'breadth',
+      headline: `${spoken.size} different message${spoken.size === 1 ? '' : 's'} used`,
+      detail: 'Breadth of use, not a score. A familiar phrase turning up in a brand-new place is worth logging.',
+      suggestMilestone: 'new-context',
+    })
+  }
+
+  return hints
+}
+
+// ---------------------------------------------------------------------------
+// A summary a caregiver can hand to an SLP
+// ---------------------------------------------------------------------------
+
+export function buildSummary(opts: {
+  childName: string
+  stage: ChildStage
+  milestones: LoggedMilestone[]
+  notes: { at: number; detail: string }[]
+  focusPhrases: Phrase[]
+  hints: UsageHint[]
+}): string {
+  const { childName, stage, milestones, notes, focusPhrases, hints } = opts
+  const g = STAGE_GUIDANCE[stage]
+  const date = (at: number) => new Date(at).toLocaleDateString()
+  const name = childName.trim() || 'This communicator'
+  const lines: string[] = []
+
+  lines.push(`EchoBloom summary — ${name}`)
+  lines.push(`Prepared ${new Date().toLocaleDateString()}`)
+  lines.push('')
+  lines.push(`CURRENT STAGE (caregiver-set): ${stage} — ${g.name}`)
+  lines.push(g.whatsHappening)
+  lines.push('')
+
+  lines.push('OBSERVED MILESTONES')
+  if (milestones.length === 0) {
+    lines.push('  (none logged yet)')
+  } else {
+    for (const m of [...milestones].reverse()) {
+      lines.push(
+        `  ${date(m.at)} — ${m.kind?.label ?? m.id}${m.kind ? ` [signals stage ${m.kind.signals}]` : ''}`,
+      )
+      if (m.note) lines.push(`      "${m.note}"`)
+    }
+  }
+  lines.push('')
+
+  lines.push('PHRASES BEING MODELED NOW')
+  if (focusPhrases.length === 0) lines.push('  (none starred)')
+  else for (const p of focusPhrases) lines.push(`  - ${p.text}`)
+  lines.push('')
+
+  if (notes.length > 0) {
+    lines.push('CAREGIVER NOTES')
+    for (const n of notes.slice(0, 20)) lines.push(`  ${date(n.at)} — ${n.detail}`)
+    lines.push('')
+  }
+
+  if (hints.length > 0) {
+    lines.push('APP USE IN THE LAST 2 WEEKS (taps in the app, not speech samples)')
+    for (const h of hints) lines.push(`  - ${h.headline}`)
+    lines.push('')
+  }
+
+  lines.push('WHAT WE ARE DOING AT THIS STAGE')
+  for (const line of g.modelThis) lines.push(`  + ${line}`)
+  for (const line of g.avoidThis) lines.push(`  - avoiding: ${line}`)
+  lines.push('')
+  lines.push(`WATCHING FOR: ${g.watchFor}`)
+  lines.push('')
+  lines.push(
+    'Note: stages follow the Natural Language Acquisition framework (Blanc), which is',
+  )
+  lines.push(
+    'widely used clinically but does not yet have controlled effectiveness research.',
+  )
+  lines.push('The stage above was set by a caregiver, not measured by the app.')
+
+  return lines.join('\n')
 }

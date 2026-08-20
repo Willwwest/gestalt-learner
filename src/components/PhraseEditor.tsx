@@ -52,7 +52,7 @@ export default function PhraseEditor({ phrase, isNew, onDone }: Props) {
     try {
       if (isBoardPhrase && quickAccess && !phrase.quickAccess) {
         const existingQuick = (await listPhrases()).filter(
-          (item) => item.quickAccess && !item.hidden && item.id !== phrase.id,
+          (item) => item.quickAccess && item.id !== phrase.id,
         )
         if (existingQuick.length >= 5) {
           throw new Error('Quick Talk already has five phrases. Unpin one before adding another')

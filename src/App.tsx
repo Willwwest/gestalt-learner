@@ -14,6 +14,7 @@ import { loadSettings, saveSettings } from './lib/db'
 import { stopAllAudio } from './lib/audio'
 import type { Settings } from './lib/types'
 import { DEFAULT_SETTINGS } from './lib/types'
+import { getActiveProfileId, renameCommunicatorProfile } from './lib/profiles'
 
 const loadGrownUps = () => import('./components/GrownUps')
 const GrownUps = lazy(loadGrownUps)
@@ -155,6 +156,9 @@ export default function App() {
   }, [])
 
   const updateSettings = useCallback((next: Settings) => {
+    if (next.childName.trim()) {
+      renameCommunicatorProfile(getActiveProfileId(), next.childName)
+    }
     setSettings(next)
     void saveSettings(next)
   }, [])

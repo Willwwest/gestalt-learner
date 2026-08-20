@@ -157,12 +157,18 @@ export async function exportBackup(settings: Settings): Promise<void> {
 export async function shareBackup(settings: Settings): Promise<'shared' | 'downloaded'> {
   const file = await createBackupFile(settings)
   if (navigator.share && (!navigator.canShare || navigator.canShare({ files: [file] }))) {
-    await navigator.share({
-      files: [file],
-      title: 'EchoBloom communicator backup',
-      text: 'Private EchoBloom vocabulary and media backup',
-    })
-    return 'shared'
+    try {
+      await navigator.share({
+        files: [file],
+        title: 'EchoBloom communicator backup',
+        text: 'Private EchoBloom vocabulary and media backup',
+      })
+      return 'shared'
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') throw error
+      // Some WebViews expire transient user activation while a large backup is
+      // assembled. A normal file download remains a safe, recoverable fallback.
+    }
   }
   downloadFile(file)
   return 'downloaded'

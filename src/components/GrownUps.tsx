@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import PhraseManager from './PhraseManager'
 import SongManager from './SongManager'
 import SceneManager from './SceneManager'
@@ -34,6 +34,12 @@ export default function GrownUps({
   onSettingsChange: (s: Settings) => void
 }) {
   const [tab, setTab] = useState<Tab>('guide')
+  const bodyRef = useRef<HTMLElement>(null)
+
+  const chooseTab = (next: Tab) => {
+    bodyRef.current?.scrollTo({ top: 0, behavior: 'auto' })
+    setTab(next)
+  }
 
   return (
     <div className="grownups">
@@ -52,7 +58,7 @@ export default function GrownUps({
             <button
               key={t.id}
               className={`gu-tab${tab === t.id ? ' active' : ''}`}
-              onClick={() => setTab(t.id)}
+              onClick={() => chooseTab(t.id)}
               aria-current={tab === t.id ? 'page' : undefined}
             >
               <span className="gu-tab-icon">
@@ -73,7 +79,7 @@ export default function GrownUps({
           </span>
         </div>
       </aside>
-      <main className="gu-body">
+      <main className="gu-body" ref={bodyRef}>
         <div className="gu-content">
           {tab === 'guide' && <Guide />}
           {tab === 'progress' && (

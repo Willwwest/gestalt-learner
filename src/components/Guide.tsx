@@ -135,7 +135,10 @@ export default function Guide() {
       <h3>The road to conversation 🛣️</h3>
       <p>
         Meeting your child at their current stage is step one — but the app is also
-        built to <em>pull forward</em>. Here's the engine, and how to run it:
+        built to <em>pull forward</em>. The <strong>Progress</strong> tab is where this
+        lives: it names the stage, gives you a short "do this week" list built from your
+        own board, and tells you which signals mean it is time to change what you do.
+        Here's the engine behind it:
       </p>
       <ul>
         <li>
