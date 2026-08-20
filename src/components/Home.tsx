@@ -63,6 +63,15 @@ const ACTIVITIES: Activity[] = [
     color: '#b24d78',
     soft: '#ffedf4',
   },
+  {
+    id: 'books',
+    icon: 'book',
+    kicker: 'Read together',
+    label: 'Story Time',
+    note: 'Say the repeated line with me.',
+    color: '#2f6f9f',
+    soft: '#e6f1fa',
+  },
 ]
 
 export default function Home({

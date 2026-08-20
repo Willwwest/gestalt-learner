@@ -1,7 +1,9 @@
 import { useRef, useState } from 'react'
+import CaregiverHome from './CaregiverHome'
 import PhraseManager from './PhraseManager'
 import SongManager from './SongManager'
 import SceneManager from './SceneManager'
+import BookManager from './BookManager'
 import Guide from './Guide'
 import StageTracker from './StageTracker'
 import Journal from './Journal'
@@ -9,21 +11,45 @@ import SettingsPanel from './SettingsPanel'
 import Icon, { type IconName } from './Icon'
 import type { Settings } from '../lib/types'
 
-type Tab = 'guide' | 'progress' | 'phrases' | 'songs' | 'scenes' | 'journal' | 'settings'
+type Tab =
+  | 'today'
+  | 'guide'
+  | 'progress'
+  | 'phrases'
+  | 'songs'
+  | 'books'
+  | 'scenes'
+  | 'journal'
+  | 'settings'
 
-const TABS: { id: Tab; label: string; detail: string; icon: IconName }[] = [
-  { id: 'guide', label: 'Guide', detail: 'Learn the approach', icon: 'book' },
-  { id: 'progress', label: 'Progress', detail: 'Stage & next steps', icon: 'sprout' },
+const TAB_GROUPS: Array<{
+  label: string
+  tabs: Array<{ id: Tab; label: string; detail: string; icon: IconName }>
+}> = [
   {
-    id: 'phrases',
-    label: 'Phrases',
-    detail: 'Words & recordings',
-    icon: 'record',
+    label: 'Start here',
+    tabs: [
+      { id: 'today', label: 'Today', detail: 'One useful next step', icon: 'home' },
+      { id: 'progress', label: 'Progress', detail: 'Plan & milestones', icon: 'sprout' },
+    ],
   },
-  { id: 'songs', label: 'Songs', detail: 'Lines & pauses', icon: 'songs' },
-  { id: 'scenes', label: 'Photo scenes', detail: 'Familiar places', icon: 'photos' },
-  { id: 'journal', label: 'Journal', detail: 'Notice progress', icon: 'journal' },
-  { id: 'settings', label: 'Settings', detail: 'Device & backup', icon: 'settings' },
+  {
+    label: 'Personalize',
+    tabs: [
+      { id: 'phrases', label: 'Phrases', detail: 'Words & recordings', icon: 'record' },
+      { id: 'songs', label: 'Songs', detail: 'Lines & pauses', icon: 'songs' },
+      { id: 'books', label: 'Story Time', detail: 'Books & refrains', icon: 'book' },
+      { id: 'scenes', label: 'Photo scenes', detail: 'Familiar places', icon: 'photos' },
+    ],
+  },
+  {
+    label: 'Review & manage',
+    tabs: [
+      { id: 'journal', label: 'Journal', detail: 'Notes & patterns', icon: 'journal' },
+      { id: 'settings', label: 'Settings', detail: 'Access & backup', icon: 'settings' },
+      { id: 'guide', label: 'Help library', detail: 'Answers when needed', icon: 'book' },
+    ],
+  },
 ]
 
 export default function GrownUps({
@@ -33,7 +59,7 @@ export default function GrownUps({
   settings: Settings
   onSettingsChange: (s: Settings) => void
 }) {
-  const [tab, setTab] = useState<Tab>('guide')
+  const [tab, setTab] = useState<Tab>('today')
   const bodyRef = useRef<HTMLElement>(null)
 
   const chooseTab = (next: Tab) => {
@@ -49,26 +75,31 @@ export default function GrownUps({
             <Icon name="grownups" size={25} />
           </span>
           <div>
-            <strong>Caregiver studio</strong>
-            <span>Shape the experience</span>
+            <strong>Caregiver tools</strong>
+            <span>Start small. Go deeper when useful.</span>
           </div>
         </div>
         <nav className="gu-tabs" aria-label="Caregiver tools">
-          {TABS.map((t) => (
-            <button
-              key={t.id}
-              className={`gu-tab${tab === t.id ? ' active' : ''}`}
-              onClick={() => chooseTab(t.id)}
-              aria-current={tab === t.id ? 'page' : undefined}
-            >
-              <span className="gu-tab-icon">
-                <Icon name={t.icon} size={21} />
-              </span>
-              <span className="gu-tab-copy">
-                <strong>{t.label}</strong>
-                <small>{t.detail}</small>
-              </span>
-            </button>
+          {TAB_GROUPS.map((group) => (
+            <div className="gu-tab-group" key={group.label}>
+              <span className="gu-group-label">{group.label}</span>
+              {group.tabs.map((t) => (
+                <button
+                  key={t.id}
+                  className={`gu-tab${tab === t.id ? ' active' : ''}`}
+                  onClick={() => chooseTab(t.id)}
+                  aria-current={tab === t.id ? 'page' : undefined}
+                >
+                  <span className="gu-tab-icon">
+                    <Icon name={t.icon} size={21} />
+                  </span>
+                  <span className="gu-tab-copy">
+                    <strong>{t.label}</strong>
+                    <small>{t.detail}</small>
+                  </span>
+                </button>
+              ))}
+            </div>
           ))}
         </nav>
         <div className="privacy-note">
@@ -81,12 +112,14 @@ export default function GrownUps({
       </aside>
       <main className="gu-body" ref={bodyRef}>
         <div className="gu-content">
+          {tab === 'today' && <CaregiverHome settings={settings} onNavigate={chooseTab} />}
           {tab === 'guide' && <Guide />}
           {tab === 'progress' && (
             <StageTracker settings={settings} onSettingsChange={onSettingsChange} />
           )}
           {tab === 'phrases' && <PhraseManager settings={settings} />}
           {tab === 'songs' && <SongManager settings={settings} />}
+          {tab === 'books' && <BookManager settings={settings} />}
           {tab === 'scenes' && <SceneManager settings={settings} />}
           {tab === 'journal' && <Journal />}
           {tab === 'settings' && (

@@ -1,5 +1,6 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb'
 import type {
+  Book,
   Category,
   Phrase,
   PhotoRow,
@@ -25,12 +26,13 @@ interface EchoBloomDB extends DBSchema {
   photos: { key: string; value: PhotoRow }
   symbols: { key: string; value: SymbolRow }
   messages: { key: number; value: SpokenMessage; indexes: { byTime: number } }
+  books: { key: string; value: Book }
 }
 
 let dbPromise: Promise<IDBPDatabase<EchoBloomDB>> | null = null
 
 export function getDB() {
-  dbPromise ??= openDB<EchoBloomDB>(databaseNameForProfile(getActiveProfileId()), 4, {
+  dbPromise ??= openDB<EchoBloomDB>(databaseNameForProfile(getActiveProfileId()), 5, {
     upgrade(db, oldVersion) {
       if (oldVersion < 1) {
         db.createObjectStore('categories', { keyPath: 'id' })
@@ -55,6 +57,9 @@ export function getDB() {
           autoIncrement: true,
         })
         messages.createIndex('byTime', 'at')
+      }
+      if (oldVersion < 5) {
+        db.createObjectStore('books', { keyPath: 'id' })
       }
     },
     // another tab is trying to upgrade: get out of its way and pick up the new version
@@ -185,6 +190,28 @@ export async function deleteSong(id: string) {
   await db.delete('songs', id)
 }
 
+// ---------- story time books ----------
+export async function listBooks(): Promise<Book[]> {
+  const db = await getDB()
+  const all = await db.getAll('books')
+  return all.sort((a, b) => a.order - b.order)
+}
+
+export async function putBook(book: Book) {
+  const db = await getDB()
+  await db.put('books', book)
+}
+
+export async function deleteBook(id: string) {
+  const db = await getDB()
+  const book = await db.get('books', id)
+  await deletePhrasesInCategory(`book:${id}`)
+  for (const page of book?.pages ?? []) {
+    if (page.photoId) await db.delete('photos', page.photoId)
+  }
+  await db.delete('books', id)
+}
+
 // ---------- photo scenes ----------
 export async function listScenes(): Promise<Scene[]> {
   const db = await getDB()
@@ -239,10 +266,15 @@ export async function clearEvents() {
 
 // ---------- child-facing communication history ----------
 export async function rememberMessage(message: Omit<SpokenMessage, 'id' | 'at'>) {
-  const db = await getDB()
   const saved: SpokenMessage = { ...message, at: Date.now() }
-  const id = await db.add('messages', saved)
-  const withId = { ...saved, id }
+  let withId = saved
+  try {
+    const db = await getDB()
+    const id = await db.add('messages', saved)
+    withId = { ...saved, id }
+  } catch {
+    // A full/locked store must never stop immediate communication or replay.
+  }
   window.dispatchEvent(new CustomEvent<SpokenMessage>('echobloom:message', { detail: withId }))
   return withId
 }

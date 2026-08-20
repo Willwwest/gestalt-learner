@@ -1,5 +1,6 @@
 import { getDB } from './db'
 import type {
+  Book,
   Category,
   Phrase,
   PhotoRow,
@@ -29,7 +30,7 @@ interface SymbolEntry extends BlobEntry {
 
 interface BackupFile {
   app: 'echobloom'
-  version: 1 | 2 | 3 | 4
+  version: 1 | 2 | 3 | 4 | 5
   exportedAt: string
   settings: Settings | null
   categories: Category[]
@@ -44,6 +45,8 @@ interface BackupFile {
   symbols?: SymbolEntry[]
   // version 4+
   messages?: SpokenMessage[]
+  // version 5+
+  books?: Book[]
 }
 
 export interface BackupSummary {
@@ -102,7 +105,7 @@ const encodeSymbols = (rows: SymbolRow[]): Promise<SymbolEntry[]> =>
 
 async function createBackupFile(settings: Settings): Promise<File> {
   const db = await getDB()
-  const [categories, phrases, events, recordings, songs, scenes, photos, symbols, messages] =
+  const [categories, phrases, events, recordings, songs, scenes, photos, symbols, messages, books] =
     await Promise.all([
       db.getAll('categories'),
       db.getAll('phrases'),
@@ -113,10 +116,11 @@ async function createBackupFile(settings: Settings): Promise<File> {
       db.getAll('photos'),
       db.getAll('symbols'),
       db.getAll('messages'),
+      db.getAll('books'),
     ])
   const payload: BackupFile = {
     app: 'echobloom',
-    version: 4,
+    version: 5,
     exportedAt: new Date().toISOString(),
     settings,
     categories,
@@ -128,6 +132,7 @@ async function createBackupFile(settings: Settings): Promise<File> {
     photos: await encodeRows(photos),
     symbols: await encodeSymbols(symbols),
     messages,
+    books,
   }
   const safeName = (settings.childName || getActiveProfile().name || 'communicator')
     .toLocaleLowerCase()
@@ -178,7 +183,7 @@ function parseBackup(text: string): BackupFile {
   const parsed = JSON.parse(text) as BackupFile
   if (
     parsed.app !== 'echobloom' ||
-    ![1, 2, 3, 4].includes(parsed.version)
+    ![1, 2, 3, 4, 5].includes(parsed.version)
   ) {
     throw new Error('Not an EchoBloom backup file')
   }
@@ -279,6 +284,7 @@ export async function importBackup(file: File): Promise<Settings | null> {
         return rest as SpokenMessage
       })
     : []
+  const books = parsed.version >= 5 ? requireRows(parsed.books, 'books') : []
 
   const db = await getDB()
   const tx = db.transaction(
@@ -293,6 +299,7 @@ export async function importBackup(file: File): Promise<Settings | null> {
       'photos',
       'symbols',
       'messages',
+      'books',
     ],
     'readwrite',
   )
@@ -307,6 +314,7 @@ export async function importBackup(file: File): Promise<Settings | null> {
       tx.objectStore('photos').clear(),
       tx.objectStore('symbols').clear(),
       tx.objectStore('messages').clear(),
+      tx.objectStore('books').clear(),
     ])
     for (const c of categories) await tx.objectStore('categories').put(c)
     for (const p of phrases) await tx.objectStore('phrases').put(p)
@@ -317,6 +325,7 @@ export async function importBackup(file: File): Promise<Settings | null> {
     for (const p of photos) await tx.objectStore('photos').put(p)
     for (const symbol of symbols) await tx.objectStore('symbols').put(symbol)
     for (const message of messages) await tx.objectStore('messages').put(message)
+    for (const book of books) await tx.objectStore('books').put(book)
     if (parsed.settings) {
       await tx.objectStore('settings').put({
         key: 'app',

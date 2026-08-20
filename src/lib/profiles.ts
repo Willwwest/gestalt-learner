@@ -34,7 +34,11 @@ function readProfiles(): CommunicatorProfile[] {
 }
 
 function writeProfiles(profiles: CommunicatorProfile[]) {
-  localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles))
+  try {
+    localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles))
+  } catch {
+    // The default profile and its IndexedDB remain usable without localStorage.
+  }
 }
 
 export function listCommunicatorProfiles(): CommunicatorProfile[] {
@@ -45,7 +49,12 @@ export function listCommunicatorProfiles(): CommunicatorProfile[] {
 
 export function getActiveProfileId(): string {
   const profiles = readProfiles()
-  const requested = localStorage.getItem(ACTIVE_KEY)
+  let requested: string | null = null
+  try {
+    requested = localStorage.getItem(ACTIVE_KEY)
+  } catch {
+    return 'default'
+  }
   return profiles.some((profile) => profile.id === requested) ? requested! : 'default'
 }
 
@@ -82,7 +91,11 @@ export function activateCommunicatorProfile(id: string) {
   if (!readProfiles().some((profile) => profile.id === id)) {
     throw new Error('That communicator profile no longer exists')
   }
-  localStorage.setItem(ACTIVE_KEY, id)
+  try {
+    localStorage.setItem(ACTIVE_KEY, id)
+  } catch {
+    throw new Error('Profile switching needs local device storage to be available')
+  }
 }
 
 export async function deleteCommunicatorProfile(id: string) {

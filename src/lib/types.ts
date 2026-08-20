@@ -78,6 +78,28 @@ export interface Scene {
   order: number
 }
 
+export interface BookPage {
+  /** big emoji standing in for art when there is no photo */
+  emoji: string
+  /** the page's words, shown large — print pairing matters for early readers */
+  text: string
+  /** optional photo from the family's own copy of the book */
+  photoId?: string
+}
+
+/** A shared-reading book. Its repeated line lives in `phrases` under
+ *  categoryId `book:<id>`, so refrains get recordings and editing for free. */
+export interface Book {
+  id: string
+  title: string
+  emoji: string
+  pages: BookPage[]
+  /** seconds to wait before the refrain during read-along, so the child fills it in */
+  pauseSec: number
+  order: number
+  builtin?: boolean
+}
+
 export interface PhotoRow {
   id: string
   blob: Blob

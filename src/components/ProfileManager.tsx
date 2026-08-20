@@ -36,14 +36,22 @@ export default function ProfileManager({
 
   const create = () => {
     if (!newName.trim()) return
-    const profile = createCommunicatorProfile(newName)
-    activateCommunicatorProfile(profile.id)
-    window.location.reload()
+    try {
+      const profile = createCommunicatorProfile(newName)
+      activateCommunicatorProfile(profile.id)
+      window.location.reload()
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : String(error))
+    }
   }
 
   const switchTo = (id: string) => {
-    activateCommunicatorProfile(id)
-    window.location.reload()
+    try {
+      activateCommunicatorProfile(id)
+      window.location.reload()
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : String(error))
+    }
   }
 
   const remove = async (id: string, name: string) => {

@@ -41,6 +41,7 @@ export default function StageTracker({
   const [events, setEvents] = useState<UsageEvent[]>([])
   const [summaryOpen, setSummaryOpen] = useState(false)
   const [copied, setCopied] = useState('')
+  const [showPlan, setShowPlan] = useState(false)
 
   const stage = settings.childStage
   const guidance = STAGE_GUIDANCE[stage]
@@ -130,12 +131,51 @@ export default function StageTracker({
         <div>
           <h2>Progress</h2>
           <p>
-            Where your child is in the gestalt language path, what to model right now,
-            and the signals that mean it is time to change what you do. Nothing here is
-            a test or a score — it is a record of what you have noticed.
+            A working stage and one practical next step. Open the detailed plan only
+            when you want milestones, history, or a care-team summary.
           </p>
         </div>
       </div>
+
+      <section className="progress-brief" aria-labelledby="progress-brief-heading">
+        <div className="progress-brief-stage">
+          <span>Current working stage</span>
+          <strong>Stage {stage}</strong>
+        </div>
+        <div className="progress-brief-copy">
+          <h3 id="progress-brief-heading">{guidance.name}</h3>
+          <p>{guidance.whatsHappening}</p>
+        </div>
+        <div className="progress-one-thing">
+          <span className="care-eyebrow">Try one thing</span>
+          <strong>{practice[0]?.title ?? 'Use one short model in a real moment'}</strong>
+          <p>{practice[0]?.action ?? guidance.modelThis[0]}</p>
+          {practice[0]?.phrases.length ? (
+            <div className="practice-chips">
+              {practice[0].phrases.slice(0, 3).map((phrase) => (
+                <span className="practice-chip" key={phrase.id}>
+                  <span aria-hidden="true">{phrase.emoji}</span>
+                  {phrase.text}
+                </span>
+              ))}
+            </div>
+          ) : null}
+        </div>
+        {suggestion.readyToAdvance && (
+          <div className="stage-suggestion ready compact">
+            <div>
+              <strong>You may want to review stage {suggestion.suggested}.</strong>
+              <p>{suggestion.reason}</p>
+            </div>
+          </div>
+        )}
+        <button type="button" className="btn" onClick={() => setShowPlan((open) => !open)}>
+          {showPlan ? 'Close detailed plan' : 'Open detailed plan'}
+        </button>
+      </section>
+
+      {showPlan && (
+        <div className="progress-details">
 
       {/* ---- stage rail ---- */}
       <div className="stage-rail" role="group" aria-label="Language stage">
@@ -390,6 +430,8 @@ export default function StageTracker({
         Treat the stage here as a shared vocabulary for what you are seeing, not a
         diagnosis — and bring this page to an SLP rather than replacing one with it.
       </p>
+        </div>
+      )}
     </div>
   )
 }

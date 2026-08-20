@@ -1,5 +1,5 @@
-import { getDB, putCategory, putPhrase, putSong } from './db'
-import type { Category, LanguageCode, Phrase, SlotKind, Stage } from './types'
+import { getDB, putBook, putCategory, putPhrase, putSong } from './db'
+import type { Book, Category, LanguageCode, Phrase, SlotKind, Stage } from './types'
 
 // Built-in starter library.
 // Every phrase follows the modeling rules for gestalt language processors:
@@ -738,6 +738,94 @@ async function applyPack5QuickTalk() {
   }
 }
 
+
+// Pack 6: Story Time. Shared reading is one of the richest natural sources of
+// gestalts — a picture book's repeated line is already shaped exactly like the
+// chunks a gestalt learner collects. Both books are traditional or original to
+// this app, and every refrain is deliberately mitigable.
+interface SeedBook {
+  book: Omit<Book, 'order'>
+  /** the repeated line(s) the child taps — stored as phrases, so they can be recorded */
+  refrains: SeedPhrase[]
+}
+
+const PACK6_BOOKS: SeedBook[] = [
+  {
+    book: {
+      id: 'builtin-book-pigs',
+      title: 'The Three Little Pigs',
+      emoji: '🐷',
+      pauseSec: 0,
+      builtin: true,
+      pages: [
+        { emoji: '🐷', text: 'Three little pigs went out to build their houses.' },
+        { emoji: '🌾', text: 'The first pig built a house of straw.' },
+        { emoji: '🐺', text: 'Along came the wolf. He knocked on the door.' },
+        { emoji: '🚪', text: '"Little pig, little pig, let me come in!"' },
+        { emoji: '🐷', text: '"Not by the hair on my chinny chin chin!"' },
+        { emoji: '💨', text: 'So he huffed, and he puffed, and he blew the house down!' },
+        { emoji: '🪵', text: 'The second pig built a house of sticks. The wolf came again.' },
+        { emoji: '🐷', text: '"Not by the hair on my chinny chin chin!"' },
+        { emoji: '💨', text: 'So he huffed, and he puffed, and he blew the house down!' },
+        { emoji: '🧱', text: 'The third pig built a strong house of bricks.' },
+        { emoji: '🐺', text: 'The wolf huffed and puffed... but the house stayed up!' },
+        { emoji: '🎉', text: 'The three little pigs were safe. The end!' },
+      ],
+    },
+    refrains: [
+      ['Not by the hair on my chinny chin chin!', '🐷'],
+      ['Let me come in!', '🚪'],
+      ["I'll huff and I'll puff!", '💨'],
+    ],
+  },
+  {
+    book: {
+      id: 'builtin-book-goodnight',
+      title: 'Goodnight, Everyone',
+      emoji: '🌙',
+      pauseSec: 0,
+      builtin: true,
+      pages: [
+        { emoji: '🌙', text: 'The moon is up. It is time for bed.' },
+        { emoji: '🧸', text: 'Goodnight, teddy!' },
+        { emoji: '🚗', text: 'Goodnight, cars!' },
+        { emoji: '📚', text: 'Goodnight, books!' },
+        { emoji: '🐶', text: 'Goodnight, puppy!' },
+        { emoji: '🪟', text: 'Goodnight, moon outside my window.' },
+        { emoji: '💛', text: 'Goodnight, everyone. I love you!' },
+        { emoji: '😴', text: 'Shhh. Time to sleep.' },
+      ],
+    },
+    refrains: [
+      ['Goodnight!', '🌙'],
+      ['I love you!', '💛'],
+      ['Time to sleep.', '😴'],
+    ],
+  },
+]
+
+async function applyPack6Books() {
+  const db = await getDB()
+  let order = await db.count('books')
+  for (const { book, refrains } of PACK6_BOOKS) {
+    if (await db.get('books', book.id)) continue
+    await putBook({ ...book, order: order++ })
+    let i = 0
+    for (const [text, emoji] of refrains) {
+      await putPhrase({
+        id: `${book.id}-refrain-${i}`,
+        categoryId: `book:${book.id}`,
+        text,
+        emoji,
+        lang: 'en',
+        stage: 1,
+        order: i++,
+        builtin: true,
+      })
+    }
+  }
+}
+
 /** Apply any content packs newer than what this install has seen. */
 export async function seedContentPacks(): Promise<boolean> {
   const db = await getDB()
@@ -756,6 +844,10 @@ export async function seedContentPacks(): Promise<boolean> {
     await applyPack5QuickTalk()
     applied = true
   }
-  if (applied) await db.put('settings', { key: 'content-version', value: 5 })
+  if (version < 6) {
+    await applyPack6Books()
+    applied = true
+  }
+  if (applied) await db.put('settings', { key: 'content-version', value: 6 })
   return applied
 }

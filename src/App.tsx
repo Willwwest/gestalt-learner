@@ -7,6 +7,7 @@ import Mix from './components/Mix'
 import Letters from './components/Letters'
 import Songs from './components/Songs'
 import Scenes from './components/Scenes'
+import Books from './components/Books'
 import QuickTalk from './components/QuickTalk'
 import VoiceDock from './components/VoiceDock'
 import Onboarding from './components/Onboarding'
@@ -19,7 +20,15 @@ import { getActiveProfileId, renameCommunicatorProfile } from './lib/profiles'
 const loadGrownUps = () => import('./components/GrownUps')
 const GrownUps = lazy(loadGrownUps)
 
-export type View = 'home' | 'board' | 'mix' | 'letters' | 'songs' | 'scenes' | 'grownups'
+export type View =
+  | 'home'
+  | 'board'
+  | 'mix'
+  | 'letters'
+  | 'songs'
+  | 'scenes'
+  | 'books'
+  | 'grownups'
 
 const TITLES: Record<
   Exclude<View, 'home'>,
@@ -59,6 +68,13 @@ const TITLES: Record<
     eyebrow: 'Family moments',
     accent: '#b24d78',
     soft: '#ffedf4',
+  },
+  books: {
+    icon: 'book',
+    label: 'Story Time',
+    eyebrow: 'Read together',
+    accent: '#2f6f9f',
+    soft: '#e6f1fa',
   },
   grownups: {
     icon: 'grownups',
@@ -232,6 +248,7 @@ export default function App() {
             {view === 'letters' && <Letters settings={settings} />}
             {view === 'songs' && <Songs settings={settings} />}
             {view === 'scenes' && <Scenes settings={settings} />}
+            {view === 'books' && <Books settings={settings} />}
           </div>
         )}
         {view !== 'grownups' && <VoiceDock settings={settings} />}
